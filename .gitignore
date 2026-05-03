@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+.venv/
+venv/
+
+# Django
+staticfiles/
+media/
+.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Secrets
+firebase-credentials.json
+*.pem
+*.key

@@ -1,0 +1,181 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-unfold_boilerplate_db}
+      POSTGRES_USER: ${DB_USER:-unfold_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ:-Asia/Tashkent}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  rustfs-perms:
+    image: alpine:3.20
+    user: root
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/app/logs
+    command: sh -c "chown -R 10001:10001 /data /app/logs"
+    networks:
+      - coolify
+    restart: "no"
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_VOLUMES: /data/rustfs0
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-localhost}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      RUSTFS_REGION: ${RUSTFS_REGION:-auto}
+      RUSTFS_OBS_LOGGER_LEVEL: info
+      RUSTFS_OBS_LOG_DIRECTORY: /app/logs
+      TZ: ${TZ:-Asia/Tashkent}
+    command: ["/data/rustfs0"]
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/app/logs
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/health >/dev/null && curl -fsS http://localhost:9001/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  rustfs-init:
+    image: minio/mc:latest
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      RUSTFS_BUCKET_NAME: ${RUSTFS_BUCKET_NAME:-unfold-boilerplate}
+    entrypoint: >
+      sh -c "
+        mc alias set rustfs http://rustfs:9000 $$RUSTFS_ACCESS_KEY $$RUSTFS_SECRET_KEY &&
+        mc mb --ignore-existing rustfs/$$RUSTFS_BUCKET_NAME &&
+        mc anonymous set public rustfs/$$RUSTFS_BUCKET_NAME &&
+        echo 'RustFS bucket ready.'
+      "
+    networks:
+      - coolify
+    restart: on-failure
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      ENABLE_HTTPS_REDIRECT: ${ENABLE_HTTPS_REDIRECT:-True}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      DB_ENGINE: ${DB_ENGINE:-django.db.backends.postgresql}
+      DB_NAME: ${DB_NAME:-unfold_boilerplate_db}
+      DB_USER: ${DB_USER:-unfold_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_CONN_MAX_AGE: ${DB_CONN_MAX_AGE:-60}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      USE_RUSTFS: ${USE_RUSTFS:-True}
+      FORCE_RUSTFS_IN_DEBUG: ${FORCE_RUSTFS_IN_DEBUG:-True}
+      RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-localhost:9000}
+      RUSTFS_INTERNAL_ENDPOINT: ${RUSTFS_INTERNAL_ENDPOINT:-rustfs:9000}
+      RUSTFS_USE_HTTPS: ${RUSTFS_USE_HTTPS:-False}
+      RUSTFS_INTERNAL_USE_HTTPS: ${RUSTFS_INTERNAL_USE_HTTPS:-False}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      RUSTFS_BUCKET_NAME: ${RUSTFS_BUCKET_NAME:-unfold-boilerplate}
+      RUSTFS_REGION: ${RUSTFS_REGION:-auto}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
+      DRF_THROTTLE_ANON: ${DRF_THROTTLE_ANON:-100/hour}
+      DRF_THROTTLE_USER: ${DRF_THROTTLE_USER:-1000/hour}
+      DRF_THROTTLE_OTP: ${DRF_THROTTLE_OTP:-5/minute}
+      OTP_LENGTH: ${OTP_LENGTH:-5}
+      OTP_DEFAULT_CODE: ${OTP_DEFAULT_CODE:-11111}
+      OTP_EXPIRY_SECONDS: ${OTP_EXPIRY_SECONDS:-120}
+      OTP_RESEND_COOLDOWN_SECONDS: ${OTP_RESEND_COOLDOWN_SECONDS:-60}
+      OTP_MAX_DAILY_PER_PHONE: ${OTP_MAX_DAILY_PER_PHONE:-9999}
+      OTP_MAX_VERIFY_ATTEMPTS: ${OTP_MAX_VERIFY_ATTEMPTS:-3}
+      SMS_BACKEND: ${SMS_BACKEND:-console}
+      FIREBASE_CREDENTIALS_PATH: ${FIREBASE_CREDENTIALS_PATH:-}
+      FIREBASE_CREDENTIALS_JSON: ${FIREBASE_CREDENTIALS_JSON:-}
+      FIREBASE_CREDENTIALS_BASE64: ${FIREBASE_CREDENTIALS_BASE64:-}
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY:-}
+      TZ: ${TZ:-Asia/Tashkent}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+      rustfs-init:
+        condition: service_completed_successfully
+    expose:
+      - "8000"
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+
+volumes:
+  postgres_data:
+  redis_data:
+  rustfs_data:
+  rustfs_logs:
+  static_files:
+  media_files:
+
+networks:
+  coolify:
+    external: true

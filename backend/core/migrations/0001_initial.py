@@ -1,0 +1,150 @@
+# Generated for django-unfold-boilerplate
+
+import decimal
+from django.conf import settings
+from django.db import migrations, models
+import django.contrib.auth.models
+import django.contrib.auth.validators
+import django.db.models.deletion
+import django.utils.timezone
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        ('auth', '0012_alter_user_first_name_max_length'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='User',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=150, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()], verbose_name='username')),
+                ('first_name', models.CharField(blank=True, max_length=150, verbose_name='first name')),
+                ('last_name', models.CharField(blank=True, max_length=150, verbose_name='last name')),
+                ('email', models.EmailField(blank=True, max_length=254, verbose_name='email address')),
+                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
+                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
+                ('phone', models.CharField(max_length=20, unique=True, verbose_name='Telefon')),
+                ('avatar', models.ImageField(blank=True, null=True, upload_to='avatars/', verbose_name='Avatar')),
+                ('language', models.CharField(choices=[('uz', "O'zbek"), ('en', 'English'), ('ru', 'Rus')], default='uz', max_length=5, verbose_name='Til')),
+                ('role', models.CharField(choices=[('user', 'Foydalanuvchi'), ('staff', 'Xodim'), ('admin', 'Admin')], default='user', max_length=20, verbose_name='Rol')),
+                ('is_phone_verified', models.BooleanField(default=False, verbose_name='Telefon tasdiqlangan')),
+                ('date_of_birth', models.DateField(blank=True, null=True, verbose_name="Tug'ilgan sana")),
+                ('gender', models.CharField(blank=True, choices=[('male', 'Erkak'), ('female', 'Ayol')], max_length=10, verbose_name='Jinsi')),
+                ('balance', models.DecimalField(decimal_places=2, default=decimal.Decimal('0'), max_digits=12, verbose_name='Balans')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan vaqt')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Yangilangan vaqt')),
+                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
+                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+            ],
+            options={
+                'verbose_name': 'Foydalanuvchi',
+                'verbose_name_plural': 'Foydalanuvchilar',
+                'db_table': 'users',
+            },
+            managers=[
+                ('objects', django.contrib.auth.models.UserManager()),
+            ],
+        ),
+        migrations.CreateModel(
+            name='AppConfig',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('app_name', models.CharField(default='Unfold Boilerplate', max_length=100, verbose_name='Ilova nomi')),
+                ('support_phone', models.CharField(blank=True, max_length=30, verbose_name='Yordam telefoni')),
+                ('support_email', models.EmailField(blank=True, max_length=254, verbose_name='Yordam emaili')),
+                ('min_supported_version', models.CharField(blank=True, max_length=20, verbose_name='Minimal versiya')),
+                ('force_update', models.BooleanField(default=False, verbose_name='Majburiy yangilash')),
+                ('maintenance_mode', models.BooleanField(default=False, verbose_name='Texnik tanaffus')),
+                ('about_title', models.CharField(default='Unfold Boilerplate', max_length=200, verbose_name='Haqida sarlavha')),
+                ('about_description', models.TextField(blank=True, verbose_name='Haqida matni')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Yangilangan vaqt')),
+            ],
+            options={
+                'verbose_name': 'App Config',
+                'verbose_name_plural': 'App Config',
+                'db_table': 'app_config',
+            },
+        ),
+        migrations.CreateModel(
+            name='OTPVerification',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('phone', models.CharField(db_index=True, max_length=20, verbose_name='Telefon')),
+                ('code', models.CharField(max_length=10, verbose_name='Kod')),
+                ('is_used', models.BooleanField(default=False, verbose_name='Ishlatilgan')),
+                ('attempts', models.PositiveIntegerField(default=0, verbose_name='Urinishlar')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan vaqt')),
+                ('expires_at', models.DateTimeField(verbose_name='Tugash vaqti')),
+            ],
+            options={
+                'verbose_name': 'OTP kod',
+                'verbose_name_plural': 'OTP kodlar',
+                'db_table': 'otp_verifications',
+                'ordering': ('-created_at',),
+            },
+        ),
+        migrations.CreateModel(
+            name='DeviceToken',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('token', models.CharField(db_index=True, max_length=500, unique=True, verbose_name='Token')),
+                ('platform', models.CharField(choices=[('ios', 'iOS'), ('android', 'Android'), ('web', 'Web')], default='ios', max_length=20, verbose_name='Platforma')),
+                ('device_id', models.CharField(blank=True, max_length=255, verbose_name='Qurilma ID')),
+                ('device_name', models.CharField(blank=True, max_length=255, verbose_name='Qurilma nomi')),
+                ('app_version', models.CharField(blank=True, max_length=50, verbose_name='Ilova versiyasi')),
+                ('is_active', models.BooleanField(default=True, verbose_name='Faol')),
+                ('last_used_at', models.DateTimeField(blank=True, null=True, verbose_name='Oxirgi foydalanish')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan vaqt')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='device_tokens', to=settings.AUTH_USER_MODEL, verbose_name='Foydalanuvchi')),
+            ],
+            options={
+                'verbose_name': 'Qurilma tokeni',
+                'verbose_name_plural': 'Qurilma tokenlari',
+                'db_table': 'device_tokens',
+            },
+        ),
+        migrations.CreateModel(
+            name='NotificationSettings',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('push_enabled', models.BooleanField(default=True, verbose_name='Push yoqilgan')),
+                ('chat_messages', models.BooleanField(default=True, verbose_name='Chat xabarlari')),
+                ('reminders', models.BooleanField(default=True, verbose_name='Eslatmalar')),
+                ('promotions', models.BooleanField(default=False, verbose_name='Aksiyalar')),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='notification_settings', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': 'Bildirishnoma sozlamasi',
+                'verbose_name_plural': 'Bildirishnoma sozlamalari',
+                'db_table': 'notification_settings',
+            },
+        ),
+        migrations.CreateModel(
+            name='Notification',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('type', models.CharField(choices=[('system', 'Tizim'), ('chat', 'Chat'), ('reminder', 'Eslatma'), ('promotion', 'Aksiya')], default='system', max_length=20, verbose_name='Tur')),
+                ('title', models.CharField(max_length=200, verbose_name='Sarlavha')),
+                ('body', models.TextField(verbose_name='Matn')),
+                ('data', models.JSONField(blank=True, default=dict, verbose_name="Qo'shimcha ma'lumot")),
+                ('is_read', models.BooleanField(default=False, verbose_name="O'qilgan")),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Yaratilgan vaqt')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL, verbose_name='Foydalanuvchi')),
+            ],
+            options={
+                'verbose_name': 'Bildirishnoma',
+                'verbose_name_plural': 'Bildirishnomalar',
+                'db_table': 'notifications',
+                'ordering': ('-created_at',),
+            },
+        ),
+    ]

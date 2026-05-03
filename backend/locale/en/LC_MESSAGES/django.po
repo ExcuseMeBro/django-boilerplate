@@ -1,0 +1,405 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: django-boilerplate\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-03 13:16+0500\n"
+"PO-Revision-Date: 2026-05-03 13:16+0500\n"
+"Last-Translator: ExcuseMeBro\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "O'zbek tili"
+msgstr "Uzbek"
+
+msgid "English"
+msgstr "English"
+
+msgid "Rus tili"
+msgstr "Russian"
+
+msgid "Unfold Boilerplate Admin"
+msgstr "Unfold Boilerplate Admin"
+
+msgid "Unfold Boilerplate"
+msgstr "Unfold Boilerplate"
+
+msgid "Foydalanuvchilar"
+msgstr "Users"
+
+msgid "OTP kodlar"
+msgstr "OTP codes"
+
+msgid "Qurilma tokenlari"
+msgstr "Device tokens"
+
+msgid "Xabarlar"
+msgstr "Messages"
+
+msgid "Suhbatlar"
+msgstr "Conversations"
+
+msgid "Bildirishnomalar"
+msgstr "Notifications"
+
+msgid "Bildirishnoma sozlamalari"
+msgstr "Notification settings"
+
+msgid "Sozlamalar"
+msgstr "Settings"
+
+msgid "App Config"
+msgstr "App Config"
+
+msgid "Qo'shimcha ma'lumotlar"
+msgstr "Additional information"
+
+msgid "To'liq ism"
+msgstr "Full name"
+
+msgid "Holat"
+msgstr "Status"
+
+msgid "Faol"
+msgstr "Active"
+
+msgid "Muddati o'tgan"
+msgstr "Expired"
+
+msgid "Ishlatilgan"
+msgstr "Used"
+
+msgid "Muddati o'tgan OTP kodlarni o'chirish"
+msgstr "Delete expired OTP codes"
+
+msgid "%(count)d ta muddati o'tgan OTP kod o'chirildi."
+msgstr "%(count)d expired OTP codes were deleted."
+
+msgid "Ishlatilgan OTP kodlarni o'chirish"
+msgstr "Delete used OTP codes"
+
+msgid "%(count)d ta ishlatilgan OTP kod o'chirildi."
+msgstr "%(count)d used OTP codes were deleted."
+
+msgid "Tur"
+msgstr "Type"
+
+msgid "Tanlangan bildirishnomalarni o'qilgan deb belgilash"
+msgstr "Mark selected notifications as read"
+
+msgid "%(count)d ta bildirishnoma o'qilgan deb belgilandi."
+msgstr "%(count)d notifications were marked as read."
+
+msgid "Ilova"
+msgstr "App"
+
+msgid "Yordam"
+msgstr "Support"
+
+msgid "Haqida"
+msgstr "About"
+
+msgid "Oxirgi yangilash"
+msgstr "Last update"
+
+msgid "O'zbek"
+msgstr "Uzbek"
+
+msgid "Rus"
+msgstr "Russian"
+
+msgid "Erkak"
+msgstr "Male"
+
+msgid "Ayol"
+msgstr "Female"
+
+msgid "Foydalanuvchi"
+msgstr "User"
+
+msgid "Xodim"
+msgstr "Staff"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Telefon"
+msgstr "Phone"
+
+msgid "Avatar"
+msgstr "Avatar"
+
+msgid "Til"
+msgstr "Language"
+
+msgid "Rol"
+msgstr "Role"
+
+msgid "Telefon tasdiqlangan"
+msgstr "Phone verified"
+
+msgid "Tug'ilgan sana"
+msgstr "Date of birth"
+
+msgid "Jinsi"
+msgstr "Gender"
+
+msgid "Balans"
+msgstr "Balance"
+
+msgid "Yaratilgan vaqt"
+msgstr "Created at"
+
+msgid "Yangilangan vaqt"
+msgstr "Updated at"
+
+msgid "Kod"
+msgstr "Code"
+
+msgid "Urinishlar"
+msgstr "Attempts"
+
+msgid "Tugash vaqti"
+msgstr "Expires at"
+
+msgid "OTP kod"
+msgstr "OTP code"
+
+msgid "Platforma"
+msgstr "Platform"
+
+msgid "Qurilma ID"
+msgstr "Device ID"
+
+msgid "Qurilma nomi"
+msgstr "Device name"
+
+msgid "Ilova versiyasi"
+msgstr "App version"
+
+msgid "Oxirgi foydalanish"
+msgstr "Last used at"
+
+msgid "Qurilma tokeni"
+msgstr "Device token"
+
+msgid "Push yoqilgan"
+msgstr "Push enabled"
+
+msgid "Chat xabarlari"
+msgstr "Chat messages"
+
+msgid "Eslatmalar"
+msgstr "Reminders"
+
+msgid "Aksiyalar"
+msgstr "Promotions"
+
+msgid "Bildirishnoma sozlamasi"
+msgstr "Notification setting"
+
+msgid "Tizim"
+msgstr "System"
+
+msgid "Chat"
+msgstr "Chat"
+
+msgid "Eslatma"
+msgstr "Reminder"
+
+msgid "Aksiya"
+msgstr "Promotion"
+
+msgid "Sarlavha"
+msgstr "Title"
+
+msgid "Matn"
+msgstr "Text"
+
+msgid "Qo'shimcha ma'lumot"
+msgstr "Additional data"
+
+msgid "O'qilgan"
+msgstr "Read"
+
+msgid "Bildirishnoma"
+msgstr "Notification"
+
+msgid "Ilova nomi"
+msgstr "App name"
+
+msgid "Yordam telefoni"
+msgstr "Support phone"
+
+msgid "Yordam emaili"
+msgstr "Support email"
+
+msgid "Minimal versiya"
+msgstr "Minimum version"
+
+msgid "Majburiy yangilash"
+msgstr "Force update"
+
+msgid "Texnik tanaffus"
+msgstr "Maintenance mode"
+
+msgid "Haqida sarlavha"
+msgstr "About title"
+
+msgid "Haqida matni"
+msgstr "About text"
+
+msgid "Telefon raqam noto'g'ri."
+msgstr "Phone number is invalid."
+
+msgid "Yangi OTP kod so'rashdan oldin kuting."
+msgstr "Please wait before requesting a new OTP code."
+
+msgid "Kunlik OTP limiti tugagan."
+msgstr "Daily OTP limit reached."
+
+msgid "Faol OTP kod topilmadi."
+msgstr "Active OTP code was not found."
+
+msgid "OTP kod muddati o'tgan."
+msgstr "OTP code has expired."
+
+msgid "Urinishlar soni tugagan."
+msgstr "Attempt limit reached."
+
+msgid "OTP kod noto'g'ri."
+msgstr "OTP code is invalid."
+
+msgid "ok"
+msgstr "ok"
+
+msgid "OTP kod yuborildi."
+msgstr "OTP code has been sent."
+
+msgid "Ishtirokchilar"
+msgstr "Participants"
+
+msgid "Suhbat"
+msgstr "Conversation"
+
+msgid "Yuboruvchi"
+msgstr "Sender"
+
+msgid "Xabar"
+msgstr "Message"
+
+msgid "Django Unfold boilerplate"
+msgstr "Django Unfold boilerplate"
+
+msgid "PostgreSQL, RustFS media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
+msgstr "PostgreSQL, RustFS media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
+
+msgid "Open admin"
+msgstr "Open admin"
+
+msgid "Health check"
+msgstr "Health check"
+
+msgid "This field is required."
+msgstr "This field is required."
+
+msgid "This field may not be blank."
+msgstr "This field may not be blank."
+
+msgid "This field may not be null."
+msgstr "This field may not be null."
+
+msgid "Enter a valid value."
+msgstr "Enter a valid value."
+
+msgid "Enter a valid email address."
+msgstr "Enter a valid email address."
+
+msgid "Ensure this field has no more than {max_length} characters."
+msgstr "Ensure this field has no more than {max_length} characters."
+
+msgid "Ensure this field has at least {min_length} characters."
+msgstr "Ensure this field has at least {min_length} characters."
+
+msgid "A valid integer is required."
+msgstr "A valid integer is required."
+
+msgid "A valid number is required."
+msgstr "A valid number is required."
+
+msgid "Invalid value."
+msgstr "Invalid value."
+
+msgid "Not found."
+msgstr "Not found."
+
+msgid "Method \"{method}\" not allowed."
+msgstr "Method \"{method}\" not allowed."
+
+msgid "Authentication credentials were not provided."
+msgstr "Authentication credentials were not provided."
+
+msgid "You do not have permission to perform this action."
+msgstr "You do not have permission to perform this action."
+
+msgid "Invalid token."
+msgstr "Invalid token."
+
+msgid "Token is invalid or expired"
+msgstr "Token is invalid or expired"
+
+msgid "Given token not valid for any token type"
+msgstr "Given token not valid for any token type"
+
+msgid "User is inactive"
+msgstr "User is inactive"
+
+msgid "No active account found with the given credentials"
+msgstr "No active account found with the given credentials"
+
+msgid "Request was throttled."
+msgstr "Request was throttled."
+
+msgid "Request was throttled. Expected available in {wait} second."
+msgstr "Request was throttled. Expected available in {wait} second."
+
+msgid "Request was throttled. Expected available in {wait} seconds."
+msgstr "Request was throttled. Expected available in {wait} seconds."
+
+msgid "Incorrect type. Expected URL string, received {input_type}."
+msgstr "Incorrect type. Expected URL string, received {input_type}."
+
+msgid "Invalid pk \"{pk_value}\" - object does not exist."
+msgstr "Invalid pk \"{pk_value}\" - object does not exist."
+
+msgid "Invalid hyperlink - Object does not exist."
+msgstr "Invalid hyperlink - Object does not exist."
+
+msgid "Invalid hyperlink - No URL match."
+msgstr "Invalid hyperlink - No URL match."
+
+msgid "Must be a valid UUID."
+msgstr "Must be a valid UUID."
+
+msgid "Upload a valid image. The file you uploaded was either not an image or a corrupted image."
+msgstr "Upload a valid image. The file you uploaded was either not an image or a corrupted image."
+
+msgid "The submitted data was not a file. Check the encoding type on the form."
+msgstr "The submitted data was not a file. Check the encoding type on the form."
+
+msgid "No file was submitted."
+msgstr "No file was submitted."
+
+msgid "The submitted file is empty."
+msgstr "The submitted file is empty."
+
+msgid "Ensure this filename has at most {max_length} characters (it has {length})."
+msgstr "Ensure this filename has at most {max_length} characters (it has {length})."
+
+msgid "Expected available in {wait} second."
+msgstr "Expected available in {wait} second."
+
+msgid "Expected available in {wait} seconds."
+msgstr "Expected available in {wait} seconds."
