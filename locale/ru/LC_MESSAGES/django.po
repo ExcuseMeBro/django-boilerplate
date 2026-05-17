@@ -293,8 +293,8 @@ msgstr "Сообщение"
 msgid "Django Unfold boilerplate"
 msgstr "Django Unfold boilerplate"
 
-msgid "PostgreSQL, RustFS media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
-msgstr "PostgreSQL, медиа-хранилище RustFS, JWT, OTP, DRF, Channels и защищенные настройки админ-панели готовы."
+msgid "PostgreSQL, MinIO media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
+msgstr "PostgreSQL, медиа-хранилище MinIO, JWT, OTP, DRF, Channels и защищенные настройки админ-панели готовы."
 
 msgid "Open admin"
 msgstr "Открыть админ-панель"

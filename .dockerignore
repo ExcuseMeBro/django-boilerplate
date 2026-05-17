@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+__pycache__
+*.py[cod]
+*.sqlite3
+*.log
+.env
+codedb.snapshot
+media
+staticfiles
+.DS_Store
+.idea
+.vscode

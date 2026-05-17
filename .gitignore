@@ -11,6 +11,9 @@ staticfiles/
 media/
 .env
 
+# Generated indexes
+codedb.snapshot
+
 # OS / IDE
 .DS_Store
 .idea/

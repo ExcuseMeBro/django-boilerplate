@@ -1,17 +1,16 @@
 services:
-
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-unfold_boilerplate_db}
       POSTGRES_USER: ${DB_USER:-unfold_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-unfold_password_change_me}
       TZ: ${TZ:-Asia/Tashkent}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - coolify
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -23,10 +22,10 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - coolify
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -34,101 +33,75 @@ services:
       retries: 20
       start_period: 10s
 
-  rustfs-perms:
-    image: alpine:3.20
-    user: root
-    volumes:
-      - rustfs_data:/data
-      - rustfs_logs:/app/logs
-    command: sh -c "chown -R 10001:10001 /data /app/logs"
-    networks:
-      - coolify
-    restart: "no"
-
-  rustfs:
-    image: rustfs/rustfs:latest
+  minio:
+    image: minio/minio:latest
     restart: unless-stopped
-    depends_on:
-      rustfs-perms:
-        condition: service_completed_successfully
+    command: server /data --address ":9000" --console-address ":9001"
     environment:
-      RUSTFS_VOLUMES: /data/rustfs0
-      RUSTFS_ADDRESS: 0.0.0.0:9000
-      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
-      RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-localhost}
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-      RUSTFS_REGION: ${RUSTFS_REGION:-auto}
-      RUSTFS_OBS_LOGGER_LEVEL: info
-      RUSTFS_OBS_LOG_DIRECTORY: /app/logs
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin-change-me}
+      MINIO_REGION_NAME: ${MINIO_REGION:-us-east-1}
       TZ: ${TZ:-Asia/Tashkent}
-    command: ["/data/rustfs0"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
-      - rustfs_data:/data
-      - rustfs_logs:/app/logs
-    expose:
-      - "9000"
-      - "9001"
-    networks:
-      - coolify
+      - minio_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/health >/dev/null && curl -fsS http://localhost:9001/health >/dev/null"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/ready"]
       interval: 10s
       timeout: 5s
       retries: 20
-      start_period: 30s
+      start_period: 20s
 
-  rustfs-init:
+  minio-init:
     image: minio/mc:latest
     depends_on:
-      rustfs:
+      minio:
         condition: service_healthy
     environment:
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-      RUSTFS_BUCKET_NAME: ${RUSTFS_BUCKET_NAME:-unfold-boilerplate}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin-change-me}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-unfold-boilerplate}
     entrypoint: >
       sh -c "
-        mc alias set rustfs http://rustfs:9000 $$RUSTFS_ACCESS_KEY $$RUSTFS_SECRET_KEY &&
-        mc mb --ignore-existing rustfs/$$RUSTFS_BUCKET_NAME &&
-        mc anonymous set public rustfs/$$RUSTFS_BUCKET_NAME &&
-        echo 'RustFS bucket ready.'
+        mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+        mc mb --ignore-existing minio/$$MINIO_BUCKET_NAME &&
+        mc anonymous set public minio/$$MINIO_BUCKET_NAME &&
+        echo 'MinIO bucket ready.'
       "
-    networks:
-      - coolify
     restart: on-failure
 
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY:-unfold-boilerplate-dev-secret-key-change-me}
+      DEBUG: ${DEBUG:-True}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
-      ENABLE_HTTPS_REDIRECT: ${ENABLE_HTTPS_REDIRECT:-True}
+      ENABLE_HTTPS_REDIRECT: ${ENABLE_HTTPS_REDIRECT:-False}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
       DB_ENGINE: ${DB_ENGINE:-django.db.backends.postgresql}
       DB_NAME: ${DB_NAME:-unfold_boilerplate_db}
       DB_USER: ${DB_USER:-unfold_user}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD:-unfold_password_change_me}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}
       DB_CONN_MAX_AGE: ${DB_CONN_MAX_AGE:-60}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-      USE_RUSTFS: ${USE_RUSTFS:-True}
-      FORCE_RUSTFS_IN_DEBUG: ${FORCE_RUSTFS_IN_DEBUG:-True}
-      RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-localhost:9000}
-      RUSTFS_INTERNAL_ENDPOINT: ${RUSTFS_INTERNAL_ENDPOINT:-rustfs:9000}
-      RUSTFS_USE_HTTPS: ${RUSTFS_USE_HTTPS:-False}
-      RUSTFS_INTERNAL_USE_HTTPS: ${RUSTFS_INTERNAL_USE_HTTPS:-False}
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
-      RUSTFS_BUCKET_NAME: ${RUSTFS_BUCKET_NAME:-unfold-boilerplate}
-      RUSTFS_REGION: ${RUSTFS_REGION:-auto}
+      USE_MINIO: ${USE_MINIO:-True}
+      FORCE_MINIO_IN_DEBUG: ${FORCE_MINIO_IN_DEBUG:-True}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-localhost:9000}
+      MINIO_INTERNAL_ENDPOINT: ${MINIO_INTERNAL_ENDPOINT:-minio:9000}
+      MINIO_USE_HTTPS: ${MINIO_USE_HTTPS:-False}
+      MINIO_INTERNAL_USE_HTTPS: ${MINIO_INTERNAL_USE_HTTPS:-False}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin-change-me}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-unfold-boilerplate}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
       DRF_THROTTLE_ANON: ${DRF_THROTTLE_ANON:-100/hour}
       DRF_THROTTLE_USER: ${DRF_THROTTLE_USER:-1000/hour}
@@ -150,14 +123,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rustfs:
+      minio:
         condition: service_healthy
-      rustfs-init:
+      minio-init:
         condition: service_completed_successfully
-    expose:
-      - "8000"
-    networks:
-      - coolify
+    ports:
+      - "8000:8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')\""]
       interval: 30s
@@ -171,11 +142,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  rustfs_data:
-  rustfs_logs:
+  minio_data:
   static_files:
   media_files:
-
-networks:
-  coolify:
-    external: true

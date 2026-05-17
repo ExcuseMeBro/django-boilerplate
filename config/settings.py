@@ -5,7 +5,7 @@ BabyTime + DoctorAI patterns, hardened:
 - Unfold first in INSTALLED_APPS
 - phone + OTP auth with SimpleJWT
 - DRF throttling, CORS, Channels
-- RustFS S3-compatible media storage
+- MinIO S3-compatible media storage
 - Docker/Coolify-ready security defaults
 """
 
@@ -243,12 +243,12 @@ OTP_MAX_VERIFY_ATTEMPTS = int(os.environ.get('OTP_MAX_VERIFY_ATTEMPTS', '3'))
 SMS_BACKEND = os.environ.get('SMS_BACKEND', 'console')
 
 BACKEND_URL = os.environ.get('BACKEND_URL', 'http://localhost:8000').rstrip('/')
-USE_RUSTFS = env_bool('USE_RUSTFS', False)
-FORCE_RUSTFS_IN_DEBUG = env_bool('FORCE_RUSTFS_IN_DEBUG', False)
-if DEBUG and USE_RUSTFS and not FORCE_RUSTFS_IN_DEBUG:
-    USE_RUSTFS = False
+USE_MINIO = env_bool('USE_MINIO', False)
+FORCE_MINIO_IN_DEBUG = env_bool('FORCE_MINIO_IN_DEBUG', False)
+if DEBUG and USE_MINIO and not FORCE_MINIO_IN_DEBUG:
+    USE_MINIO = False
 
-if USE_RUSTFS:
+if USE_MINIO:
     from botocore.config import Config
 
     def _normalize_endpoint(value: str) -> str:
@@ -259,32 +259,32 @@ if USE_RUSTFS:
             value = value[len('http://'):]
         return value.rstrip('/')
 
-    RUSTFS_ENDPOINT = _normalize_endpoint(os.environ.get('RUSTFS_ENDPOINT', 'localhost:9000'))
-    RUSTFS_INTERNAL_ENDPOINT = _normalize_endpoint(os.environ.get('RUSTFS_INTERNAL_ENDPOINT', RUSTFS_ENDPOINT))
-    RUSTFS_ACCESS_KEY = os.environ.get('RUSTFS_ACCESS_KEY', 'rustfsadmin')
-    RUSTFS_SECRET_KEY = os.environ.get('RUSTFS_SECRET_KEY', 'rustfsadmin')
-    RUSTFS_BUCKET_NAME = os.environ.get('RUSTFS_BUCKET_NAME', 'unfold-boilerplate')
-    RUSTFS_USE_HTTPS = env_bool('RUSTFS_USE_HTTPS', False)
-    RUSTFS_INTERNAL_USE_HTTPS = env_bool('RUSTFS_INTERNAL_USE_HTTPS', RUSTFS_USE_HTTPS)
-    RUSTFS_REGION = os.environ.get('RUSTFS_REGION', 'auto')
+    MINIO_ENDPOINT = _normalize_endpoint(os.environ.get('MINIO_ENDPOINT', 'localhost:9000'))
+    MINIO_INTERNAL_ENDPOINT = _normalize_endpoint(os.environ.get('MINIO_INTERNAL_ENDPOINT', MINIO_ENDPOINT))
+    MINIO_ROOT_USER = os.environ.get('MINIO_ROOT_USER', 'minioadmin')
+    MINIO_ROOT_PASSWORD = os.environ.get('MINIO_ROOT_PASSWORD', 'minioadmin')
+    MINIO_BUCKET_NAME = os.environ.get('MINIO_BUCKET_NAME', 'unfold-boilerplate')
+    MINIO_USE_HTTPS = env_bool('MINIO_USE_HTTPS', False)
+    MINIO_INTERNAL_USE_HTTPS = env_bool('MINIO_INTERNAL_USE_HTTPS', MINIO_USE_HTTPS)
+    MINIO_REGION = os.environ.get('MINIO_REGION', 'us-east-1')
 
-    _rustfs_scheme = 'https' if RUSTFS_USE_HTTPS else 'http'
-    _rustfs_internal_scheme = 'https' if RUSTFS_INTERNAL_USE_HTTPS else 'http'
+    _minio_scheme = 'https' if MINIO_USE_HTTPS else 'http'
+    _minio_internal_scheme = 'https' if MINIO_INTERNAL_USE_HTTPS else 'http'
 
     STORAGES = {
         'default': {
-            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'BACKEND': 'storages.backends.s3.S3Storage',
             'OPTIONS': {
-                'access_key': RUSTFS_ACCESS_KEY,
-                'secret_key': RUSTFS_SECRET_KEY,
-                'bucket_name': RUSTFS_BUCKET_NAME,
-                'endpoint_url': f'{_rustfs_internal_scheme}://{RUSTFS_INTERNAL_ENDPOINT}',
-                'region_name': RUSTFS_REGION,
+                'access_key': MINIO_ROOT_USER,
+                'secret_key': MINIO_ROOT_PASSWORD,
+                'bucket_name': MINIO_BUCKET_NAME,
+                'endpoint_url': f'{_minio_internal_scheme}://{MINIO_INTERNAL_ENDPOINT}',
+                'region_name': MINIO_REGION,
                 'file_overwrite': False,
                 'default_acl': None,
                 'querystring_auth': False,
-                'url_protocol': f'{_rustfs_scheme}:',
-                'custom_domain': f'{RUSTFS_ENDPOINT}/{RUSTFS_BUCKET_NAME}',
+                'url_protocol': f'{_minio_scheme}:',
+                'custom_domain': f'{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}',
                 'client_config': Config(signature_version='s3v4', s3={'addressing_style': 'path'}),
             },
         },
@@ -292,7 +292,7 @@ if USE_RUSTFS:
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
-    MEDIA_URL = f'{_rustfs_scheme}://{RUSTFS_ENDPOINT}/{RUSTFS_BUCKET_NAME}/'
+    MEDIA_URL = f'{_minio_scheme}://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}/'
 
 FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH', '')
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')

@@ -4,13 +4,13 @@ Production-ready Django starter based on BabyTime and DoctorAI patterns.
 
 ## Stack
 
-- Django 5 + DRF + SimpleJWT
+- Django 6 + DRF + SimpleJWT
 - Django Unfold admin
 - PostgreSQL by default
 - Redis + Channels
-- RustFS S3-compatible media storage
+- MinIO S3-compatible media storage
 - Uzbek, English, Russian i18n
-- Docker Compose, Coolify-style external network
+- Single-file Docker Compose
 - Phone + OTP auth skeleton
 
 ## Use as template
@@ -19,10 +19,9 @@ Click **Use this template** on GitHub, then:
 
 ```bash
 cp .env.example .env
-# Change SECRET_KEY, DB_PASSWORD, RUSTFS_ACCESS_KEY, RUSTFS_SECRET_KEY.
+# Change SECRET_KEY, DB_PASSWORD, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD.
 
-docker network create coolify 2>/dev/null || true
-docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build
+docker compose up --build
 ```
 
 Admin user:
@@ -35,8 +34,8 @@ URLs:
 
 - API health: `http://localhost:8000/api/health/`
 - Admin: `http://localhost:8000/admin/`
-- RustFS S3: `http://localhost:9000`
-- RustFS console: `http://localhost:9001`
+- MinIO S3: `http://localhost:9000`
+- MinIO console: `http://localhost:9001`
 
 ## i18n
 
@@ -58,9 +57,8 @@ Admin language also follows Django locale middleware. Custom admin labels, Unfol
 After changing text:
 
 ```bash
-cd backend
 python manage.py makemessages -l uz -l en -l ru
-# edit backend/locale/*/LC_MESSAGES/django.po
+# edit locale/*/LC_MESSAGES/django.po
 python manage.py compilemessages
 ```
 
@@ -76,11 +74,10 @@ ENABLE_HTTPS_REDIRECT=True
 CSRF_TRUSTED_ORIGINS=https://api.example.com
 CORS_ALLOWED_ORIGINS=https://example.com
 DB_PASSWORD=long-random-db-password
-RUSTFS_ACCESS_KEY=long-access-key
-RUSTFS_SECRET_KEY=long-random-secret-key
-RUSTFS_ENDPOINT=media.example.com
-RUSTFS_SERVER_DOMAINS=media.example.com
-RUSTFS_USE_HTTPS=True
+MINIO_ROOT_USER=long-access-key
+MINIO_ROOT_PASSWORD=long-random-secret-key
+MINIO_ENDPOINT=media.example.com
+MINIO_USE_HTTPS=True
 ```
 
 ## API endpoints
@@ -107,13 +104,13 @@ Applied:
 - DRF anon/user/OTP throttling enabled.
 - OTP cooldown, daily limit, max attempts, secure random production code.
 - PostgreSQL connection health checks enabled.
-- RustFS credentials loaded from env.
+- MinIO credentials loaded from env.
 - Entrypoint runs migrations and collectstatic, not `makemigrations`.
 - Upload memory limits configured.
 
 Review before launch:
 
-- Decide if RustFS bucket must be public. Compose currently creates public media bucket.
+- Decide if MinIO bucket must be public. Compose currently creates public media bucket.
 - Add real SMS provider implementation; console backend only logs OTP.
-- Add backup policy for PostgreSQL and RustFS volumes.
+- Add backup policy for PostgreSQL and MinIO volumes.
 - Pin Docker image tags for regulated production.

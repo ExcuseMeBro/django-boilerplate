@@ -293,8 +293,8 @@ msgstr "Xabar"
 msgid "Django Unfold boilerplate"
 msgstr "Django Unfold boilerplate"
 
-msgid "PostgreSQL, RustFS media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
-msgstr "PostgreSQL, RustFS media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
+msgid "PostgreSQL, MinIO media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
+msgstr "PostgreSQL, MinIO media storage, JWT auth, OTP, DRF, Channels, and hardened admin defaults are ready."
 
 msgid "Open admin"
 msgstr "Open admin"
