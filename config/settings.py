@@ -118,28 +118,19 @@ TEMPLATES = [
     },
 ]
 
-# PostgreSQL by default. SQLite only when DB_ENGINE is explicitly set for tests/local scratch.
-DB_ENGINE = os.environ.get('DB_ENGINE', 'django.db.backends.postgresql')
-if DB_ENGINE == 'django.db.backends.sqlite3':
-    DATABASES = {
-        'default': {
-            'ENGINE': DB_ENGINE,
-            'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-        }
+# PostgreSQL only.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'unfold_boilerplate_db'),
+        'USER': os.environ.get('DB_USER', 'unfold_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
+        'CONN_HEALTH_CHECKS': True,
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': DB_ENGINE,
-            'NAME': os.environ.get('DB_NAME', 'unfold_boilerplate_db'),
-            'USER': os.environ.get('DB_USER', 'unfold_user'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-            'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
-            'CONN_HEALTH_CHECKS': True,
-        }
-    }
+}
 
 AUTH_USER_MODEL = 'core.User'
 
