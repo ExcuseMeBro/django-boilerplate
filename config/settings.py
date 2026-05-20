@@ -153,6 +153,10 @@ USE_I18N = True
 USE_TZ = True
 LOCALE_PATHS = [BASE_DIR / 'locale']
 
+# Force datetimes to render as 12.10.2020 12:12:13 in the admin and everywhere,
+# overriding the per-locale format modules that Django ships for uz/en/ru.
+FORMAT_MODULE_PATH = ['config.formats']
+
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -311,11 +315,9 @@ UNFOLD = {
                 ],
             },
             {
-                'title': _('Xabarlar'),
+                'title': _('Bildirishnomalar'),
                 'separator': True,
                 'items': [
-                    {'title': _('Suhbatlar'), 'icon': 'chat', 'link': '/admin/messaging/conversation/'},
-                    {'title': _('Xabarlar'), 'icon': 'message', 'link': '/admin/messaging/message/'},
                     {'title': _('Bildirishnomalar'), 'icon': 'notifications', 'link': '/admin/core/notification/'},
                     {'title': _('Bildirishnoma sozlamalari'), 'icon': 'tune', 'link': '/admin/core/notificationsettings/'},
 
