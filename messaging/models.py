@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -6,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 class Conversation(models.Model):
     """Simple room for chat or support conversations."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200, blank=True, verbose_name=_('Sarlavha'))
     participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='conversations', verbose_name=_('Ishtirokchilar'))
     is_active = models.BooleanField(default=True, verbose_name=_('Faol'))
@@ -25,6 +28,7 @@ class Conversation(models.Model):
 class Message(models.Model):
     """Message stored for HTTP API and WebSocket streams."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages', verbose_name=_('Suhbat'))
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages', verbose_name=_('Yuboruvchi'))
     text = models.TextField(verbose_name=_('Matn'))

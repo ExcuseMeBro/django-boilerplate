@@ -1,5 +1,6 @@
 """Core models shared by mobile-first Django projects."""
 
+import uuid
 from decimal import Decimal
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -8,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     """Phone-first user model, compatible with OTP auth."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     LANGUAGE_CHOICES = [
         ('uz', _("O'zbek")),
@@ -54,6 +57,7 @@ class User(AbstractUser):
 class OTPVerification(models.Model):
     """One-time password for phone verification."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     phone = models.CharField(max_length=20, db_index=True, verbose_name=_('Telefon'))
     code = models.CharField(max_length=10, verbose_name=_('Kod'))
     is_used = models.BooleanField(default=False, verbose_name=_('Ishlatilgan'))
@@ -89,6 +93,7 @@ class DeviceToken(models.Model):
         ('web', 'Web'),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='device_tokens', verbose_name=_('Foydalanuvchi'))
     token = models.CharField(max_length=500, unique=True, db_index=True, verbose_name='Token')
     platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES, default='ios', verbose_name=_('Platforma'))
@@ -111,6 +116,7 @@ class DeviceToken(models.Model):
 class NotificationSettings(models.Model):
     """Per-user notification preferences."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_settings')
     push_enabled = models.BooleanField(default=True, verbose_name=_('Push yoqilgan'))
     chat_messages = models.BooleanField(default=True, verbose_name=_('Chat xabarlari'))
@@ -136,6 +142,7 @@ class Notification(models.Model):
         ('promotion', _('Aksiya')),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name=_('Foydalanuvchi'))
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='system', verbose_name=_('Tur'))
     title = models.CharField(max_length=200, verbose_name=_('Sarlavha'))
@@ -157,6 +164,7 @@ class Notification(models.Model):
 class AppConfig(models.Model):
     """Singleton app settings editable from Unfold admin."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     app_name = models.CharField(max_length=100, default='Unfold Boilerplate', verbose_name=_('Ilova nomi'))
     support_phone = models.CharField(max_length=30, blank=True, verbose_name=_('Yordam telefoni'))
     support_email = models.EmailField(blank=True, verbose_name=_('Yordam emaili'))
@@ -176,10 +184,13 @@ class AppConfig(models.Model):
         return self.app_name
 
     def save(self, *args, **kwargs):
-        self.pk = 1
+        # Singleton: collapse any second insert onto the first row.
+        if self._state.adding and AppConfig.objects.exists():
+            self.pk = AppConfig.objects.values_list('pk', flat=True).first()
+            self._state.adding = False
         super().save(*args, **kwargs)
 
     @classmethod
     def get_solo(cls):
-        obj, _ = cls.objects.get_or_create(pk=1)
-        return obj
+        obj = cls.objects.first()
+        return obj or cls.objects.create()
