@@ -1,0 +1,89 @@
+{% extends 'admin/base.html' %}
+
+{% load i18n unfold %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{% trans "Dashboard" %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-8">
+
+    {# ----- KPI cards ----- #}
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {% for kpi in kpis %}
+            {% component "unfold/components/card.html" with icon=kpi.icon %}
+                {% component "unfold/components/text.html" with class="text-base-500 dark:text-base-400 uppercase text-xs tracking-wide" %}{{ kpi.title }}{% endcomponent %}
+                <div class="font-semibold text-3xl text-font-important-light tracking-tight dark:text-font-important-dark mt-2">{{ kpi.value }}</div>
+                {% component "unfold/components/text.html" with class="text-base-500 dark:text-base-400 mt-2" %}{{ kpi.footer }}{% endcomponent %}
+            {% endcomponent %}
+        {% endfor %}
+    </div>
+
+    {# ----- 7-day activity chart ----- #}
+    {% component "unfold/components/card.html" with title=_("Oxirgi 7 kun faoliyati") %}
+        {% component "unfold/components/chart/bar.html" with data=chart_data height="120" %}{% endcomponent %}
+    {% endcomponent %}
+
+    {# ----- Two-column recent activity ----- #}
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+        {% component "unfold/components/card.html" with title=_("Yangi foydalanuvchilar") %}
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-base-200 text-left text-base-500 dark:border-base-800 dark:text-base-400">
+                        <th class="py-2 font-medium">{% trans "Telefon" %}</th>
+                        <th class="py-2 font-medium">{% trans "Ism" %}</th>
+                        <th class="py-2 font-medium text-right">{% trans "Sana" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                        <tr class="border-b border-base-100 last:border-0 dark:border-base-900">
+                            <td class="py-2 font-medium text-font-important-light dark:text-font-important-dark">{{ u.phone }}</td>
+                            <td class="py-2 text-base-600 dark:text-base-300">{{ u.full_name|default:"—" }}</td>
+                            <td class="py-2 text-right text-base-500 dark:text-base-400">{{ u.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endcomponent %}
+
+        {% component "unfold/components/card.html" with title=_("Oxirgi bildirishnomalar") %}
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-base-200 text-left text-base-500 dark:border-base-800 dark:text-base-400">
+                        <th class="py-2 font-medium">{% trans "Sarlavha" %}</th>
+                        <th class="py-2 font-medium">{% trans "Foydalanuvchi" %}</th>
+                        <th class="py-2 font-medium text-right">{% trans "Vaqt" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in recent_notifications %}
+                        <tr class="border-b border-base-100 last:border-0 dark:border-base-900">
+                            <td class="py-2 font-medium text-font-important-light dark:text-font-important-dark">
+                                {{ n.title }}
+                                {% if not n.is_read %}
+                                    <span class="ml-2 inline-block w-2 h-2 rounded-full bg-primary-500 align-middle"></span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2 text-base-600 dark:text-base-300">{{ n.user.phone|default:"—" }}</td>
+                            <td class="py-2 text-right text-base-500 dark:text-base-400">{{ n.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endcomponent %}
+    </div>
+
+    {# ----- Default app list below dashboard ----- #}
+    <div class="flex flex-col lg:flex-row lg:gap-8">
+        <div class="grow">
+            {% include "unfold/helpers/app_list_default.html" %}
+        </div>
+        {% include "unfold/helpers/history.html" %}
+    </div>
+</div>
+{% endblock %}

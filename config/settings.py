@@ -300,13 +300,21 @@ UNFOLD = {
     'SITE_SYMBOL': 'dashboard',
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': False,
+    'DASHBOARD_CALLBACK': 'core.dashboard.dashboard_callback',
     'SIDEBAR': {
         'show_search': True,
         'show_all_applications': False,
         'navigation': [
             {
-                'title': _('Foydalanuvchilar'),
+                'title': _('Boshqaruv'),
                 'separator': False,
+                'items': [
+                    {'title': _('Dashboard'), 'icon': 'dashboard', 'link': '/admin/'},
+                ],
+            },
+            {
+                'title': _('Foydalanuvchilar'),
+                'separator': True,
                 'items': [
                     {'title': _('Foydalanuvchilar'), 'icon': 'people', 'link': '/admin/core/user/'},
                     {'title': _('OTP kodlar'), 'icon': 'pin', 'link': '/admin/core/otpverification/'},
