@@ -1,4 +1,6 @@
 from rest_framework import permissions, viewsets
+from rest_framework.exceptions import PermissionDenied
+from django.utils.translation import gettext_lazy as _
 
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
@@ -25,3 +27,17 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
+
+    def _assert_sender(self, instance):
+        # A participant may read every message in a conversation, but may only
+        # mutate the ones they sent.
+        if instance.sender_id != self.request.user.pk:
+            raise PermissionDenied(_("Faqat o'z xabaringizni o'zgartira olasiz."))
+
+    def perform_update(self, serializer):
+        self._assert_sender(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._assert_sender(instance)
+        instance.delete()

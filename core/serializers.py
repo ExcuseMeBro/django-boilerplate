@@ -1,3 +1,4 @@
+import logging
 import random
 import re
 from django.conf import settings
@@ -10,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import OTPVerification, DeviceToken, Notification, NotificationSettings, AppConfig
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class SendOTPSerializer(serializers.Serializer):
@@ -46,7 +48,7 @@ class SendOTPSerializer(serializers.Serializer):
         )
         # SMS provider hook. Console mode keeps boilerplate deploy-safe.
         if settings.SMS_BACKEND == 'console':
-            print(f'OTP for {phone}: {code}')
+            logger.info('OTP for %s: %s', phone, code)
         return otp
 
 
@@ -106,7 +108,7 @@ class UserSerializer(serializers.ModelSerializer):
             'avatar', 'language', 'role', 'is_phone_verified', 'date_of_birth',
             'gender', 'balance', 'created_at',
         ]
-        read_only_fields = ['id', 'role', 'is_phone_verified', 'balance', 'created_at']
+        read_only_fields = ['id', 'phone', 'role', 'is_phone_verified', 'balance', 'created_at']
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):

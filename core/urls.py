@@ -17,6 +17,6 @@ urlpatterns = [
     path('devices/token/', DeviceTokenView.as_view(), name='device-token'),
     path('notifications/', NotificationListView.as_view(), name='notification-list'),
     path('notifications/read/', NotificationMarkReadView.as_view(), name='notification-read-all'),
-    path('notifications/<int:pk>/read/', NotificationMarkReadView.as_view(), name='notification-read'),
+    path('notifications/<uuid:pk>/read/', NotificationMarkReadView.as_view(), name='notification-read'),
     path('config/', AppConfigView.as_view(), name='app-config'),
 ]

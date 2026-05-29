@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 
 from .models import Conversation, Message
 
@@ -10,6 +11,13 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ['id', 'conversation', 'sender', 'sender_phone', 'text', 'is_read', 'created_at']
         read_only_fields = ['id', 'sender', 'sender_phone', 'is_read', 'created_at']
+
+    def validate_conversation(self, conversation):
+        # Block posting into a conversation the caller is not part of (IDOR).
+        user = self.context['request'].user
+        if not conversation.participants.filter(pk=user.pk).exists():
+            raise serializers.ValidationError(_('Siz bu suhbat ishtirokchisi emassiz.'))
+        return conversation
 
 
 class ConversationSerializer(serializers.ModelSerializer):
