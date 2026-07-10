@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import OTPVerification, DeviceToken, Notification, NotificationSettings, AppConfig
@@ -102,6 +103,20 @@ class VerifyOTPSerializer(serializers.Serializer):
         }
 
 
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate_refresh(self, value):
+        try:
+            self.token = RefreshToken(value)
+        except TokenError:
+            raise serializers.ValidationError(_('Refresh token yaroqsiz.'))
+        return value
+
+    def save(self, **kwargs):
+        self.token.blacklist()
+
+
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
 
@@ -116,10 +131,28 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):
+    # This endpoint upserts, so the model's uniqueness on `token` must not turn a
+    # re-registration into a 400 before create() gets a chance to reconcile it.
+    token = serializers.CharField(max_length=500, validators=[])
+
     class Meta:
         model = DeviceToken
         fields = ['id', 'token', 'platform', 'device_id', 'device_name', 'app_version', 'is_active', 'created_at']
         read_only_fields = ['id', 'is_active', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        token = validated_data.pop('token')
+        # A push token identifies an app install, not a person, so a signed-in user
+        # may claim one their device now holds. Scoping the upsert to the caller
+        # means the row is never silently reassigned under an existing owner.
+        DeviceToken.objects.filter(token=token).exclude(user=user).delete()
+        instance, _created = DeviceToken.objects.update_or_create(
+            user=user,
+            token=token,
+            defaults={**validated_data, 'is_active': True},
+        )
+        return instance
 
 
 class NotificationSerializer(serializers.ModelSerializer):

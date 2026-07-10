@@ -10,6 +10,16 @@ class Conversation(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200, blank=True, verbose_name=_('Sarlavha'))
+    # Deleting a conversation cascades to every participant's messages, so that
+    # power belongs to the creator alone rather than to any member.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='owned_conversations',
+        verbose_name=_('Yaratuvchi'),
+    )
     participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='conversations', verbose_name=_('Ishtirokchilar'))
     is_active = models.BooleanField(default=True, verbose_name=_('Faol'))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Yaratilgan vaqt'))

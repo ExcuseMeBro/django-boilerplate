@@ -4,10 +4,11 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import DeviceToken, Notification, AppConfig
+from .models import Notification, AppConfig
 from .serializers import (
     SendOTPSerializer,
     VerifyOTPSerializer,
+    LogoutSerializer,
     UserSerializer,
     DeviceTokenSerializer,
     NotificationSerializer,
@@ -54,23 +55,19 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class DeviceTokenView(generics.CreateAPIView):
     serializer_class = DeviceTokenSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        token = serializer.validated_data['token']
-        DeviceToken.objects.update_or_create(
-            token=token,
-            defaults={
-                'user': self.request.user,
-                'platform': serializer.validated_data.get('platform', 'ios'),
-                'device_id': serializer.validated_data.get('device_id', ''),
-                'device_name': serializer.validated_data.get('device_name', ''),
-                'app_version': serializer.validated_data.get('app_version', ''),
-                'is_active': True,
-            },
-        )
 
 
 class NotificationListView(generics.ListAPIView):
