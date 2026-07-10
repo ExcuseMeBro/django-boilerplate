@@ -11,6 +11,7 @@ BabyTime + DoctorAI patterns, hardened:
 
 from datetime import timedelta
 import os
+import secrets
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
@@ -29,11 +30,14 @@ def env_list(name: str, default: str = '') -> list[str]:
     return [item.strip() for item in os.environ.get(name, default).split(',') if item.strip()]
 
 
+DEBUG = env_bool('DEBUG', False)
+
 SECRET_KEY = os.environ.get('SECRET_KEY')
-DEBUG = env_bool('DEBUG', True)
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = 'unfold-boilerplate-dev-secret-key-change-me'
+        # Ephemeral per-process key. A committed constant would sign sessions, CSRF
+        # tokens and JWTs (SIMPLE_JWT falls back to SECRET_KEY) with a public value.
+        SECRET_KEY = secrets.token_urlsafe(50)
     else:
         raise ImproperlyConfigured('SECRET_KEY environment variable must be set in production')
 
@@ -50,19 +54,20 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
 
-if not DEBUG and ENABLE_HTTPS_REDIRECT:
+# Cookie and transport hardening tracks DEBUG, not the redirect toggle: a
+# production deploy that terminates TLS at the proxy still needs Secure cookies.
+SECURE_COOKIES = env_bool('SECURE_COOKIES', not DEBUG)
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+SECURE_SSL_REDIRECT = ENABLE_HTTPS_REDIRECT and not DEBUG
+
+if not DEBUG:
     SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
 else:
     SECURE_HSTS_SECONDS = 0
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
 
 INSTALLED_APPS = [
     # Unfold must be before django.contrib.admin
@@ -129,6 +134,8 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', '5432'),
         'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
         'CONN_HEALTH_CHECKS': True,
+        # Set DB_SSLMODE=require (or verify-full) for any non-local Postgres.
+        'OPTIONS': {'sslmode': os.environ.get('DB_SSLMODE', 'prefer')},
     }
 }
 
@@ -186,8 +193,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # Deny by default. Views that must be reachable anonymously opt in with AllowAny.
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
@@ -229,7 +237,8 @@ if DEBUG:
 else:
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS')
-CORS_ALLOW_CREDENTIALS = True
+# Credentials must never be paired with a wildcard origin.
+CORS_ALLOW_CREDENTIALS = not CORS_ALLOW_ALL_ORIGINS
 
 REDIS_URL = os.environ.get('REDIS_URL', '')
 if REDIS_URL:
@@ -244,13 +253,19 @@ else:
         'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
     }
 
-OTP_LENGTH = int(os.environ.get('OTP_LENGTH', '5'))
-OTP_DEFAULT_CODE = os.environ.get('OTP_DEFAULT_CODE', '11111')
+OTP_LENGTH = int(os.environ.get('OTP_LENGTH', '6'))
 OTP_EXPIRY_SECONDS = int(os.environ.get('OTP_EXPIRY_SECONDS', '120'))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', '60'))
-OTP_MAX_DAILY_PER_PHONE = int(os.environ.get('OTP_MAX_DAILY_PER_PHONE', '9999' if DEBUG else '5'))
+OTP_MAX_DAILY_PER_PHONE = int(os.environ.get('OTP_MAX_DAILY_PER_PHONE', '5'))
 OTP_MAX_VERIFY_ATTEMPTS = int(os.environ.get('OTP_MAX_VERIFY_ATTEMPTS', '3'))
 SMS_BACKEND = os.environ.get('SMS_BACKEND', 'console')
+
+# Fixed OTP for local development. Empty means "always generate a random code".
+# Deliberately NOT derived from DEBUG: a single missing env var must never turn
+# every phone number into a one-code login.
+OTP_STATIC_CODE = os.environ.get('OTP_STATIC_CODE', '').strip()
+if OTP_STATIC_CODE and not DEBUG:
+    raise ImproperlyConfigured('OTP_STATIC_CODE bypasses authentication and cannot be set when DEBUG is False')
 
 BACKEND_URL = os.environ.get('BACKEND_URL', 'http://localhost:8000').rstrip('/')
 USE_MINIO = env_bool('USE_MINIO', False)
@@ -271,15 +286,32 @@ if USE_MINIO:
 
     MINIO_ENDPOINT = _normalize_endpoint(os.environ.get('MINIO_ENDPOINT', 'localhost:9000'))
     MINIO_INTERNAL_ENDPOINT = _normalize_endpoint(os.environ.get('MINIO_INTERNAL_ENDPOINT', MINIO_ENDPOINT))
-    MINIO_ROOT_USER = os.environ.get('MINIO_ROOT_USER', 'minioadmin')
-    MINIO_ROOT_PASSWORD = os.environ.get('MINIO_ROOT_PASSWORD', 'minioadmin')
+    MINIO_ROOT_USER = os.environ.get('MINIO_ROOT_USER', '')
+    MINIO_ROOT_PASSWORD = os.environ.get('MINIO_ROOT_PASSWORD', '')
+    if not MINIO_ROOT_USER or not MINIO_ROOT_PASSWORD:
+        raise ImproperlyConfigured('MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set when USE_MINIO is enabled')
     MINIO_BUCKET_NAME = os.environ.get('MINIO_BUCKET_NAME', 'unfold-boilerplate')
-    MINIO_USE_HTTPS = env_bool('MINIO_USE_HTTPS', False)
+    MINIO_USE_HTTPS = env_bool('MINIO_USE_HTTPS', not DEBUG)
     MINIO_INTERNAL_USE_HTTPS = env_bool('MINIO_INTERNAL_USE_HTTPS', MINIO_USE_HTTPS)
     MINIO_REGION = os.environ.get('MINIO_REGION', 'us-east-1')
 
+    # Private bucket + presigned URLs by default. MINIO_PUBLIC_READ=1 restores
+    # anonymous object reads and is only appropriate for non-sensitive media.
+    MINIO_PUBLIC_READ = env_bool('MINIO_PUBLIC_READ', False)
+    MINIO_URL_EXPIRY_SECONDS = int(os.environ.get('MINIO_URL_EXPIRY_SECONDS', '3600'))
+
     _minio_scheme = 'https' if MINIO_USE_HTTPS else 'http'
     _minio_internal_scheme = 'https' if MINIO_INTERNAL_USE_HTTPS else 'http'
+
+    # A SigV4 signature is bound to the host it was generated for, so presigned URLs
+    # must be signed against the endpoint the client will actually call. This means
+    # the backend has to reach MINIO_ENDPOINT itself when signing is enabled.
+    if MINIO_PUBLIC_READ:
+        _minio_api_endpoint = f'{_minio_internal_scheme}://{MINIO_INTERNAL_ENDPOINT}'
+        _minio_custom_domain = f'{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}'
+    else:
+        _minio_api_endpoint = f'{_minio_scheme}://{MINIO_ENDPOINT}'
+        _minio_custom_domain = None
 
     STORAGES = {
         'default': {
@@ -288,13 +320,14 @@ if USE_MINIO:
                 'access_key': MINIO_ROOT_USER,
                 'secret_key': MINIO_ROOT_PASSWORD,
                 'bucket_name': MINIO_BUCKET_NAME,
-                'endpoint_url': f'{_minio_internal_scheme}://{MINIO_INTERNAL_ENDPOINT}',
+                'endpoint_url': _minio_api_endpoint,
                 'region_name': MINIO_REGION,
                 'file_overwrite': False,
                 'default_acl': None,
-                'querystring_auth': False,
+                'querystring_auth': not MINIO_PUBLIC_READ,
+                'querystring_expire': MINIO_URL_EXPIRY_SECONDS,
                 'url_protocol': f'{_minio_scheme}:',
-                'custom_domain': f'{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}',
+                'custom_domain': _minio_custom_domain,
                 'client_config': Config(signature_version='s3v4', s3={'addressing_style': 'path'}),
             },
         },
@@ -302,7 +335,8 @@ if USE_MINIO:
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
-    MEDIA_URL = f'{_minio_scheme}://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}/'
+    if MINIO_PUBLIC_READ:
+        MEDIA_URL = f'{_minio_scheme}://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}/'
 
 FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH', '')
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
@@ -333,8 +367,6 @@ UNFOLD = {
                 'items': [
                     {'title': _('Foydalanuvchilar'), 'icon': 'people', 'link': '/admin/core/user/'},
                     {'title': _('OTP kodlar'), 'icon': 'pin', 'link': '/admin/core/otpverification/'},
-                    {'title': _('Qurilma tokenlari'), 'icon': 'devices', 'link': '/admin/core/devicetoken/'},
-
                 ],
             },
             {
@@ -342,16 +374,7 @@ UNFOLD = {
                 'separator': True,
                 'items': [
                     {'title': _('Bildirishnomalar'), 'icon': 'notifications', 'link': '/admin/core/notification/'},
-                    {'title': _('Bildirishnoma sozlamalari'), 'icon': 'tune', 'link': '/admin/core/notificationsettings/'},
-
-                ],
-            },
-            {
-                'title': _('Sozlamalar'),
-                'separator': True,
-                'items': [
-                    {'title': _('App Config'), 'icon': 'settings', 'link': '/admin/core/appconfig/'},
-
+                    {'title': _('Qurilma tokenlari'), 'icon': 'devices', 'link': '/admin/core/devicetoken/'},
                 ],
             },
         ],

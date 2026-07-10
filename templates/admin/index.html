@@ -78,12 +78,7 @@
         {% endcomponent %}
     </div>
 
-    {# ----- Default app list below dashboard ----- #}
-    <div class="flex flex-col lg:flex-row lg:gap-8">
-        <div class="grow">
-            {% include "unfold/helpers/app_list_default.html" %}
-        </div>
-        {% include "unfold/helpers/history.html" %}
-    </div>
+    {# ----- Recent admin actions ----- #}
+    {% include "unfold/helpers/history.html" %}
 </div>
 {% endblock %}

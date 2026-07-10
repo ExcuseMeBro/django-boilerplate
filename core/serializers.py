@@ -38,7 +38,7 @@ class SendOTPSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         phone = self.validated_data['phone']
-        code = settings.OTP_DEFAULT_CODE if settings.DEBUG else ''.join(
+        code = settings.OTP_STATIC_CODE or ''.join(
             random.SystemRandom().choice('0123456789') for _ in range(settings.OTP_LENGTH)
         )
         otp = OTPVerification.objects.create(
@@ -46,9 +46,13 @@ class SendOTPSerializer(serializers.Serializer):
             code=code,
             expires_at=timezone.now() + timezone.timedelta(seconds=settings.OTP_EXPIRY_SECONDS),
         )
-        # SMS provider hook. Console mode keeps boilerplate deploy-safe.
+        # SMS provider hook. The console backend prints the code, so it is confined
+        # to DEBUG — logs are not a safe place for a live authentication secret.
         if settings.SMS_BACKEND == 'console':
-            logger.info('OTP for %s: %s', phone, code)
+            if settings.DEBUG:
+                logger.info('OTP for %s: %s', phone, code)
+            else:
+                logger.warning('SMS_BACKEND=console: OTP for %s was generated but not delivered', phone)
         return otp
 
 
