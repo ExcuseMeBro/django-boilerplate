@@ -60,5 +60,9 @@ class ConversationSerializer(serializers.ModelSerializer):
         return conversation
 
     def get_last_message(self, obj):
-        msg = obj.messages.order_by('-created_at').first()
+        prefetched = getattr(obj, 'latest_messages', None)
+        if prefetched is not None:
+            msg = prefetched[0] if prefetched else None
+        else:
+            msg = obj.messages.order_by('-created_at').first()
         return MessageSerializer(msg).data if msg else None

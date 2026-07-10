@@ -48,6 +48,7 @@ class Message(models.Model):
     class Meta:
         db_table = 'messages'
         ordering = ['created_at']
+        indexes = [models.Index(fields=['conversation', 'created_at'])]
         verbose_name = _('Xabar')
         verbose_name_plural = _('Xabarlar')
 

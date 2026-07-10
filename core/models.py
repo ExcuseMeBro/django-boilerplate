@@ -132,6 +132,11 @@ class NotificationSettings(models.Model):
         return f'{self.user} settings'
 
 
+class NotificationQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user)
+
+
 class Notification(models.Model):
     """In-app notification row."""
 
@@ -151,9 +156,15 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False, verbose_name=_("O'qilgan"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Yaratilgan vaqt'))
 
+    objects = NotificationQuerySet.as_manager()
+
     class Meta:
         db_table = 'notifications'
         ordering = ('-created_at',)
+        indexes = [
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['user', '-created_at']),
+        ]
         verbose_name = _('Bildirishnoma')
         verbose_name_plural = _('Bildirishnomalar')
 
@@ -194,3 +205,8 @@ class AppConfig(models.Model):
     def get_solo(cls):
         obj = cls.objects.first()
         return obj or cls.objects.create()
+
+    @classmethod
+    def load(cls):
+        """Read-only counterpart to get_solo, for serving a GET without an INSERT."""
+        return cls.objects.first() or cls()

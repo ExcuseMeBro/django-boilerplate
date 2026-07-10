@@ -14,15 +14,21 @@ from .models import OTPVerification, DeviceToken, Notification, NotificationSett
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
+PHONE_RE = re.compile(r'\+?[0-9]{9,15}')
+
+
+def normalize_phone(value):
+    value = value.strip().replace(' ', '')
+    if not PHONE_RE.fullmatch(value):
+        raise serializers.ValidationError(_("Telefon raqam noto'g'ri."))
+    return value
+
 
 class SendOTPSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=20)
 
     def validate_phone(self, value):
-        value = value.strip().replace(' ', '')
-        if not re.fullmatch(r'\+?[0-9]{9,15}', value):
-            raise serializers.ValidationError(_("Telefon raqam noto'g'ri."))
-        return value
+        return normalize_phone(value)
 
     def validate(self, attrs):
         phone = attrs['phone']
@@ -62,10 +68,11 @@ class VerifyOTPSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=10)
 
     def validate(self, attrs):
-        phone = attrs['phone'].strip().replace(' ', '')
+        try:
+            phone = normalize_phone(attrs['phone'])
+        except serializers.ValidationError as exc:
+            raise serializers.ValidationError({'phone': exc.detail})
         code = attrs['code'].strip()
-        if not re.fullmatch(r'\+?[0-9]{9,15}', phone):
-            raise serializers.ValidationError({'phone': _("Telefon raqam noto'g'ri.")})
         otp = OTPVerification.objects.filter(phone=phone, is_used=False).order_by('-created_at').first()
         if not otp:
             raise serializers.ValidationError({'code': _('Faol OTP kod topilmadi.')})
@@ -90,7 +97,7 @@ class VerifyOTPSerializer(serializers.Serializer):
             phone=phone,
             defaults={'username': phone, 'is_phone_verified': True},
         )
-        if not user.is_phone_verified:
+        if not created and not user.is_phone_verified:
             user.is_phone_verified = True
             user.save(update_fields=['is_phone_verified'])
         NotificationSettings.objects.get_or_create(user=user)
@@ -128,6 +135,20 @@ class UserSerializer(serializers.ModelSerializer):
             'gender', 'balance', 'created_at',
         ]
         read_only_fields = ['id', 'phone', 'role', 'is_phone_verified', 'balance', 'created_at']
+
+    def validate_avatar(self, image):
+        # DRF's ImageField only proves Pillow can open the file. Without a byte and
+        # pixel ceiling a decompression bomb exhausts the worker on decode.
+        if image.size > settings.AVATAR_MAX_BYTES:
+            raise serializers.ValidationError(
+                _('Rasm hajmi %(limit)d baytdan oshmasligi kerak.') % {'limit': settings.AVATAR_MAX_BYTES}
+            )
+        width, height = getattr(image, 'image', image).size
+        if max(width, height) > settings.AVATAR_MAX_DIMENSION:
+            raise serializers.ValidationError(
+                _("Rasm o'lchami %(limit)dpx dan oshmasligi kerak.") % {'limit': settings.AVATAR_MAX_DIMENSION}
+            )
+        return image
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):

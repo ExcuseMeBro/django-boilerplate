@@ -189,6 +189,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', str(5 * 1024 * 1024)))
+AVATAR_MAX_BYTES = int(os.environ.get('AVATAR_MAX_BYTES', str(2 * 1024 * 1024)))
+AVATAR_MAX_DIMENSION = int(os.environ.get('AVATAR_MAX_DIMENSION', '4096'))
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -213,7 +215,6 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    'EXCEPTION_HANDLER': 'config.exception_handlers.localized_exception_handler',
 }
 
 SIMPLE_JWT = {

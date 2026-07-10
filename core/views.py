@@ -75,14 +75,14 @@ class NotificationListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        return Notification.objects.for_user(self.request.user)
 
 
 class NotificationMarkReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk=None):
-        qs = Notification.objects.filter(user=request.user)
+        qs = Notification.objects.for_user(request.user)
         if pk:
             qs = qs.filter(pk=pk)
         updated = qs.filter(is_read=False).update(is_read=True)
@@ -94,4 +94,5 @@ class AppConfigView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_object(self):
-        return AppConfig.get_solo()
+        # get_solo() would INSERT a row on an anonymous GET.
+        return AppConfig.load()

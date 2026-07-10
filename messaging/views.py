@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import F, Prefetch, Window
+from django.db.models.functions import RowNumber
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -17,7 +19,28 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Conversation.objects.filter(participants=self.request.user).distinct()
+        # Serializing a conversation touches its participants and its newest message.
+        # The window function keeps that to one row per conversation, so the list
+        # view costs three queries instead of two per result.
+        latest_message = (
+            Message.objects.annotate(
+                row_number=Window(
+                    RowNumber(),
+                    partition_by=[F('conversation')],
+                    order_by=F('created_at').desc(),
+                )
+            )
+            .filter(row_number=1)
+            .select_related('sender')
+        )
+        return (
+            Conversation.objects.filter(participants=self.request.user)
+            .distinct()
+            .prefetch_related(
+                'participants',
+                Prefetch('messages', queryset=latest_message, to_attr='latest_messages'),
+            )
+        )
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
