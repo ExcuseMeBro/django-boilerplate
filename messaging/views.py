@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Prefetch, Window
 from django.db.models.functions import RowNumber
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -19,6 +21,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Conversation.objects.none()
         # Serializing a conversation touches its participants and its newest message.
         # The window function keeps that to one row per conversation, so the list
         # view costs three queries instead of two per result.
@@ -69,6 +73,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation.participants.add(serializer.validated_data['user'])
         return Response(self.get_serializer(conversation).data)
 
+    @extend_schema(
+        parameters=[OpenApiParameter('user_id', OpenApiTypes.UUID, OpenApiParameter.PATH)],
+    )
     @action(detail=True, methods=['delete'], url_path=r'participants/(?P<user_id>[^/.]+)')
     def remove_participant(self, request, pk=None, user_id=None):
         conversation = self.get_object()
@@ -90,6 +97,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Message.objects.none()
         return Message.objects.filter(conversation__participants=self.request.user).select_related('sender', 'conversation')
 
     def perform_create(self, serializer):

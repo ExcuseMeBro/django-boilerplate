@@ -86,6 +86,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_filters',
+    'drf_spectacular',
     'channels',
 
     'core',
@@ -182,10 +184,16 @@ LOGGING = {
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', str(5 * 1024 * 1024)))
@@ -212,10 +220,25 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Django Boilerplate API',
+    'DESCRIPTION': 'Phone/OTP authentication, notifications, messaging, and app configuration API.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'PREPROCESSING_HOOKS': ['config.schema_urls.filter_api_v1_endpoints'],
+}
+API_DOCS_ENABLED = env_bool('API_DOCS_ENABLED', DEBUG)
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('JWT_ACCESS_TOKEN_MINUTES', '30'))),
@@ -245,6 +268,23 @@ else:
 CORS_ALLOW_CREDENTIALS = not CORS_ALLOW_ALL_ORIGINS
 
 REDIS_URL = os.environ.get('REDIS_URL', '')
+CACHE_URL = os.environ.get('CACHE_URL', '')
+if CACHE_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': CACHE_URL,
+            'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'},
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'django-boilerplate',
+        }
+    }
+
 if REDIS_URL:
     CHANNEL_LAYERS = {
         'default': {
@@ -317,30 +357,37 @@ if USE_MINIO:
         _minio_api_endpoint = f'{_minio_scheme}://{MINIO_ENDPOINT}'
         _minio_custom_domain = None
 
-    STORAGES = {
-        'default': {
-            'BACKEND': 'storages.backends.s3.S3Storage',
-            'OPTIONS': {
-                'access_key': MINIO_ROOT_USER,
-                'secret_key': MINIO_ROOT_PASSWORD,
-                'bucket_name': MINIO_BUCKET_NAME,
-                'endpoint_url': _minio_api_endpoint,
-                'region_name': MINIO_REGION,
-                'file_overwrite': False,
-                'default_acl': None,
-                'querystring_auth': not MINIO_PUBLIC_READ,
-                'querystring_expire': MINIO_URL_EXPIRY_SECONDS,
-                'url_protocol': f'{_minio_scheme}:',
-                'custom_domain': _minio_custom_domain,
-                'client_config': Config(signature_version='s3v4', s3={'addressing_style': 'path'}),
-            },
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    STORAGES['default'] = {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+        'OPTIONS': {
+            'access_key': MINIO_ROOT_USER,
+            'secret_key': MINIO_ROOT_PASSWORD,
+            'bucket_name': MINIO_BUCKET_NAME,
+            'endpoint_url': _minio_api_endpoint,
+            'region_name': MINIO_REGION,
+            'file_overwrite': False,
+            'default_acl': None,
+            'querystring_auth': not MINIO_PUBLIC_READ,
+            'querystring_expire': MINIO_URL_EXPIRY_SECONDS,
+            'url_protocol': f'{_minio_scheme}:',
+            'custom_domain': _minio_custom_domain,
+            'client_config': Config(signature_version='s3v4', s3={'addressing_style': 'path'}),
         },
     }
     if MINIO_PUBLIC_READ:
         MEDIA_URL = f'{_minio_scheme}://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}/'
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
+if SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.environ.get('SENTRY_ENVIRONMENT', 'development' if DEBUG else 'production'),
+        traces_sample_rate=float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.0')),
+        send_default_pii=False,
+        max_request_body_size='never',
+    )
 
 FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH', '')
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')

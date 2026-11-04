@@ -8,6 +8,7 @@ from .views import (
     MeView,
     DeviceTokenView,
     NotificationListView,
+    NotificationMarkAllReadView,
     NotificationMarkReadView,
     AppConfigView,
 )
@@ -20,7 +21,7 @@ urlpatterns = [
     path('auth/me/', MeView.as_view(), name='me'),
     path('devices/token/', DeviceTokenView.as_view(), name='device-token'),
     path('notifications/', NotificationListView.as_view(), name='notification-list'),
-    path('notifications/read/', NotificationMarkReadView.as_view(), name='notification-read-all'),
+    path('notifications/read/', NotificationMarkAllReadView.as_view(), name='notification-read-all'),
     path('notifications/<uuid:pk>/read/', NotificationMarkReadView.as_view(), name='notification-read'),
     path('config/', AppConfigView.as_view(), name='app-config'),
 ]

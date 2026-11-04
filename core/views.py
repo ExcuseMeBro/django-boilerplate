@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.utils.translation import gettext as _
-from rest_framework import generics, permissions, status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,7 +21,8 @@ def health_check(request):
     return JsonResponse({'status': _('ok')})
 
 
-class SendOTPView(APIView):
+class SendOTPView(generics.GenericAPIView):
+    serializer_class = SendOTPSerializer
     permission_classes = [permissions.AllowAny]
     throttle_scope = 'otp'
 
@@ -31,7 +33,8 @@ class SendOTPView(APIView):
         return Response({'detail': _('OTP kod yuborildi.')}, status=status.HTTP_201_CREATED)
 
 
-class VerifyOTPView(APIView):
+class VerifyOTPView(generics.GenericAPIView):
+    serializer_class = VerifyOTPSerializer
     permission_classes = [permissions.AllowAny]
     throttle_scope = 'otp'
 
@@ -55,7 +58,8 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class LogoutView(APIView):
+class LogoutView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -75,18 +79,44 @@ class NotificationListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Notification.objects.none()
         return Notification.objects.for_user(self.request.user)
+
+
+notification_mark_read_response = inline_serializer(
+    name='NotificationMarkReadResponse',
+    fields={'updated': serializers.IntegerField()},
+)
 
 
 class NotificationMarkReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, pk=None):
+    def mark_read(self, request, pk=None):
         qs = Notification.objects.for_user(request.user)
         if pk:
             qs = qs.filter(pk=pk)
         updated = qs.filter(is_read=False).update(is_read=True)
         return Response({'updated': updated})
+
+    @extend_schema(
+        operation_id='notifications_mark_read',
+        request=None,
+        responses=notification_mark_read_response,
+    )
+    def post(self, request, pk):
+        return self.mark_read(request, pk)
+
+
+class NotificationMarkAllReadView(NotificationMarkReadView):
+    @extend_schema(
+        operation_id='notifications_mark_all_read',
+        request=None,
+        responses=notification_mark_read_response,
+    )
+    def post(self, request):
+        return self.mark_read(request)
 
 
 class AppConfigView(generics.RetrieveAPIView):

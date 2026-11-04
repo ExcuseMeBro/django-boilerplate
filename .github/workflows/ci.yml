@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      DEBUG: "True"
+      USE_MINIO: "False"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: true
+      - name: Install Python
+        run: uv python install
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Lint
+        run: uv run --locked ruff check .
+      - name: Launcher regression tests
+        run: uv run --locked pytest tests/test_uv_workflow.py
+      - name: Django system check
+        run: uv run --locked python manage.py check

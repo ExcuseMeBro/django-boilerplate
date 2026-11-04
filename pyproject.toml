@@ -1,0 +1,64 @@
+[project]
+name = "django-boilerplate"
+version = "0.1.0"
+description = "Django REST API boilerplate with PostgreSQL, Redis and MinIO"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    # Django
+    "Django>=6.1,<6.2",
+    "python-dotenv>=1.2.3,<2.0",
+    # API / auth / documentation
+    "djangorestframework>=3.18.0,<4.0",
+    "djangorestframework-simplejwt>=5.5.1,<6.0",
+    "django-cors-headers>=4.9.0,<5.0",
+    "django-filter>=26.1,<27.0",
+    "drf-spectacular>=0.30.0,<1.0",
+    # WebSocket / cache
+    "channels>=4.3.2,<5.0",
+    "channels-redis>=4.3.0,<5.0",
+    "django-redis>=7.0.0,<8.0",
+    "daphne>=4.2.3,<5.0",
+    # Database / storage
+    "psycopg2-binary>=2.9.12,<3.0",
+    "django-storages[s3]>=1.14.6,<2.0",
+    "boto3>=1.43.86,<2.0",
+    "Pillow>=12.3.0,<13.0",
+    "whitenoise>=6.12.0,<7.0",
+    # Admin (Unfold must precede Django admin in INSTALLED_APPS)
+    "django-unfold>=0.104.1,<1.0",
+    # Monitoring / push
+    "sentry-sdk[django]>=2.68.1,<3.0",
+    "firebase-admin>=7.5.0,<8.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1,<10.0",
+    "pytest-django>=4.14.0,<5.0",
+    "coverage[toml]>=7.16.0,<8.0",
+    "ruff>=0.16.5,<1.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+testpaths = ["core", "messaging", "tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["core", "messaging"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

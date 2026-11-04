@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 from .models import Conversation, Message
 
@@ -59,6 +60,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         conversation.participants.set({*members, conversation.created_by})
         return conversation
 
+    @extend_schema_field(MessageSerializer)
     def get_last_message(self, obj):
         prefetched = getattr(obj, 'latest_messages', None)
         if prefetched is not None:

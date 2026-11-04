@@ -2,25 +2,25 @@
 
 > Auto-generated from the `.todos` board — do not edit by hand.
 
-**Total: 14**  ·  🚧 0 in progress  ·  📋 14 todo  ·  ✅ 0 done
+**Total: 3**  ·  🚧 0 in progress  ·  📋 3 todo  ·  ✅ 0 done
 
 ## By Status
 
 | Status | Count |
 |:--|--:|
 | 🚧 In Progress | 0 |
-| 📋 Todo | 14 |
+| 📋 Todo | 3 |
 | ✅ Done | 0 |
-| **Total** | **14** |
+| **Total** | **3** |
 
 ## Open Tasks by Priority
 
 | Priority | Count |
 |:--|--:|
-| 🔴 Urgent | 2 |
-| 🟠 High | 6 |
-| 🟡 Medium | 4 |
-| 🟢 Low | 2 |
+| 🔴 Urgent | 0 |
+| 🟠 High | 1 |
+| 🟡 Medium | 1 |
+| 🟢 Low | 1 |
 
 ## In Progress by ADLC Stage
 
