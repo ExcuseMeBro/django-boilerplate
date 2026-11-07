@@ -1,0 +1,573 @@
+{
+  "postgresql": "17.11",
+  "rooms": 1000,
+  "messages": 20000,
+  "endpoints": {
+    "conversations": {
+      "queries": 4,
+      "samples_ms": [
+        9.41479200264439,
+        10.05875000555534,
+        9.230541007127613,
+        9.057583010871895,
+        11.52604199887719
+      ],
+      "median_ms": 9.41479200264439,
+      "plans": [
+        {
+          "planning_ms": 0.162,
+          "execution_ms": 0.622,
+          "plan": {
+            "Node Type": "Aggregate",
+            "Plan Rows": 1,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Actual Total Time": 0.567,
+            "Shared Hit Blocks": 34,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Aggregate",
+                "Plan Rows": 1000,
+                "Actual Rows": 1000,
+                "Actual Loops": 1,
+                "Actual Total Time": 0.54,
+                "Shared Hit Blocks": 34,
+                "Shared Read Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Hash Join",
+                    "Plan Rows": 1000,
+                    "Actual Rows": 1000,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.33,
+                    "Shared Hit Blocks": 34,
+                    "Shared Read Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Seq Scan",
+                        "Relation Name": "conversations_participants",
+                        "Plan Rows": 1000,
+                        "Actual Rows": 1000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.085,
+                        "Shared Hit Blocks": 20,
+                        "Shared Read Blocks": 0
+                      },
+                      {
+                        "Node Type": "Hash",
+                        "Plan Rows": 1000,
+                        "Actual Rows": 1000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.151,
+                        "Shared Hit Blocks": 14,
+                        "Shared Read Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Seq Scan",
+                            "Relation Name": "conversations",
+                            "Plan Rows": 1000,
+                            "Actual Rows": 1000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.065,
+                            "Shared Hit Blocks": 14,
+                            "Shared Read Blocks": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "planning_ms": 0.091,
+          "execution_ms": 0.426,
+          "plan": {
+            "Node Type": "Limit",
+            "Plan Rows": 20,
+            "Actual Rows": 20,
+            "Actual Loops": 1,
+            "Actual Total Time": 0.406,
+            "Shared Hit Blocks": 34,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Unique",
+                "Plan Rows": 1000,
+                "Actual Rows": 20,
+                "Actual Loops": 1,
+                "Actual Total Time": 0.405,
+                "Shared Hit Blocks": 34,
+                "Shared Read Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Sort",
+                    "Plan Rows": 1000,
+                    "Actual Rows": 20,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.402,
+                    "Shared Hit Blocks": 34,
+                    "Shared Read Blocks": 0,
+                    "Sort Method": "quicksort",
+                    "Sort Space Used": 103,
+                    "Sort Space Type": "Memory",
+                    "Plans": [
+                      {
+                        "Node Type": "Hash Join",
+                        "Plan Rows": 1000,
+                        "Actual Rows": 1000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.294,
+                        "Shared Hit Blocks": 34,
+                        "Shared Read Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Seq Scan",
+                            "Relation Name": "conversations_participants",
+                            "Plan Rows": 1000,
+                            "Actual Rows": 1000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.067,
+                            "Shared Hit Blocks": 20,
+                            "Shared Read Blocks": 0
+                          },
+                          {
+                            "Node Type": "Hash",
+                            "Plan Rows": 1000,
+                            "Actual Rows": 1000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.131,
+                            "Shared Hit Blocks": 14,
+                            "Shared Read Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Seq Scan",
+                                "Relation Name": "conversations",
+                                "Plan Rows": 1000,
+                                "Actual Rows": 1000,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.053,
+                                "Shared Hit Blocks": 14,
+                                "Shared Read Blocks": 0
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "planning_ms": 0.108,
+          "execution_ms": 0.057,
+          "plan": {
+            "Node Type": "Hash Join",
+            "Plan Rows": 40,
+            "Actual Rows": 40,
+            "Actual Loops": 1,
+            "Actual Total Time": 0.041,
+            "Shared Hit Blocks": 18,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Bitmap Heap Scan",
+                "Relation Name": "conversations_participants",
+                "Plan Rows": 40,
+                "Actual Rows": 40,
+                "Actual Loops": 1,
+                "Actual Total Time": 0.027,
+                "Shared Hit Blocks": 17,
+                "Shared Read Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Bitmap Index Scan",
+                    "Index Name": "conversations_participants_conversation_id_988acf55",
+                    "Plan Rows": 40,
+                    "Actual Rows": 40,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.021,
+                    "Shared Hit Blocks": 16,
+                    "Shared Read Blocks": 0
+                  }
+                ]
+              },
+              {
+                "Node Type": "Hash",
+                "Plan Rows": 3,
+                "Actual Rows": 3,
+                "Actual Loops": 1,
+                "Actual Total Time": 0.006,
+                "Shared Hit Blocks": 1,
+                "Shared Read Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Seq Scan",
+                    "Relation Name": "users",
+                    "Plan Rows": 3,
+                    "Actual Rows": 3,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.003,
+                    "Shared Hit Blocks": 1,
+                    "Shared Read Blocks": 0
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "planning_ms": 0.093,
+          "execution_ms": 0.354,
+          "plan": {
+            "Node Type": "Subquery Scan",
+            "Plan Rows": 2,
+            "Actual Rows": 20,
+            "Actual Loops": 1,
+            "Actual Total Time": 0.316,
+            "Shared Hit Blocks": 37,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Sort",
+                "Plan Rows": 400,
+                "Actual Rows": 20,
+                "Actual Loops": 1,
+                "Actual Total Time": 0.314,
+                "Shared Hit Blocks": 37,
+                "Shared Read Blocks": 0,
+                "Sort Method": "quicksort",
+                "Sort Space Used": 29,
+                "Sort Space Type": "Memory",
+                "Plans": [
+                  {
+                    "Node Type": "WindowAgg",
+                    "Plan Rows": 400,
+                    "Actual Rows": 20,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.306,
+                    "Shared Hit Blocks": 37,
+                    "Shared Read Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Sort",
+                        "Plan Rows": 400,
+                        "Actual Rows": 400,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.282,
+                        "Shared Hit Blocks": 37,
+                        "Shared Read Blocks": 0,
+                        "Sort Method": "quicksort",
+                        "Sort Space Used": 112,
+                        "Sort Space Type": "Memory",
+                        "Plans": [
+                          {
+                            "Node Type": "Hash Join",
+                            "Plan Rows": 400,
+                            "Actual Rows": 400,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.127,
+                            "Shared Hit Blocks": 37,
+                            "Shared Read Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Bitmap Heap Scan",
+                                "Relation Name": "messages",
+                                "Plan Rows": 400,
+                                "Actual Rows": 400,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.061,
+                                "Shared Hit Blocks": 36,
+                                "Shared Read Blocks": 0,
+                                "Plans": [
+                                  {
+                                    "Node Type": "Bitmap Index Scan",
+                                    "Index Name": "messages_conversation_id_5ef638db",
+                                    "Plan Rows": 400,
+                                    "Actual Rows": 400,
+                                    "Actual Loops": 1,
+                                    "Actual Total Time": 0.037,
+                                    "Shared Hit Blocks": 30,
+                                    "Shared Read Blocks": 0
+                                  }
+                                ]
+                              },
+                              {
+                                "Node Type": "Hash",
+                                "Plan Rows": 3,
+                                "Actual Rows": 3,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.004,
+                                "Shared Hit Blocks": 1,
+                                "Shared Read Blocks": 0,
+                                "Plans": [
+                                  {
+                                    "Node Type": "Seq Scan",
+                                    "Relation Name": "users",
+                                    "Plan Rows": 3,
+                                    "Actual Rows": 3,
+                                    "Actual Loops": 1,
+                                    "Actual Total Time": 0.001,
+                                    "Shared Hit Blocks": 1,
+                                    "Shared Read Blocks": 0
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "messages": {
+      "queries": 2,
+      "samples_ms": [
+        14.54720800393261,
+        13.506083996617235,
+        13.914791998104192,
+        13.792707992251962,
+        12.883250004961155
+      ],
+      "median_ms": 13.792707992251962,
+      "plans": [
+        {
+          "planning_ms": 0.208,
+          "execution_ms": 4.474,
+          "plan": {
+            "Node Type": "Aggregate",
+            "Plan Rows": 1,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Actual Total Time": 4.456,
+            "Shared Hit Blocks": 287,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Hash Join",
+                "Plan Rows": 20000,
+                "Actual Rows": 20000,
+                "Actual Loops": 1,
+                "Actual Total Time": 3.951,
+                "Shared Hit Blocks": 287,
+                "Shared Read Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Hash Join",
+                    "Plan Rows": 20000,
+                    "Actual Rows": 20000,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 2.489,
+                    "Shared Hit Blocks": 267,
+                    "Shared Read Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Seq Scan",
+                        "Relation Name": "messages",
+                        "Plan Rows": 20000,
+                        "Actual Rows": 20000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.815,
+                        "Shared Hit Blocks": 253,
+                        "Shared Read Blocks": 0
+                      },
+                      {
+                        "Node Type": "Hash",
+                        "Plan Rows": 1000,
+                        "Actual Rows": 1000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.094,
+                        "Shared Hit Blocks": 14,
+                        "Shared Read Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Seq Scan",
+                            "Relation Name": "conversations",
+                            "Plan Rows": 1000,
+                            "Actual Rows": 1000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.042,
+                            "Shared Hit Blocks": 14,
+                            "Shared Read Blocks": 0
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Node Type": "Hash",
+                    "Plan Rows": 1000,
+                    "Actual Rows": 1000,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 0.125,
+                    "Shared Hit Blocks": 20,
+                    "Shared Read Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Seq Scan",
+                        "Relation Name": "conversations_participants",
+                        "Plan Rows": 1000,
+                        "Actual Rows": 1000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.075,
+                        "Shared Hit Blocks": 20,
+                        "Shared Read Blocks": 0
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "planning_ms": 0.283,
+          "execution_ms": 11.491,
+          "plan": {
+            "Node Type": "Limit",
+            "Plan Rows": 20,
+            "Actual Rows": 20,
+            "Actual Loops": 1,
+            "Actual Total Time": 11.447,
+            "Shared Hit Blocks": 288,
+            "Shared Read Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Sort",
+                "Plan Rows": 20000,
+                "Actual Rows": 20,
+                "Actual Loops": 1,
+                "Actual Total Time": 11.446,
+                "Shared Hit Blocks": 288,
+                "Shared Read Blocks": 0,
+                "Sort Method": "top-N heapsort",
+                "Sort Space Used": 35,
+                "Sort Space Type": "Memory",
+                "Plans": [
+                  {
+                    "Node Type": "Hash Join",
+                    "Plan Rows": 20000,
+                    "Actual Rows": 20000,
+                    "Actual Loops": 1,
+                    "Actual Total Time": 7.437,
+                    "Shared Hit Blocks": 288,
+                    "Shared Read Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Hash Join",
+                        "Plan Rows": 20000,
+                        "Actual Rows": 20000,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 4.574,
+                        "Shared Hit Blocks": 287,
+                        "Shared Read Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Hash Join",
+                            "Plan Rows": 20000,
+                            "Actual Rows": 20000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 2.905,
+                            "Shared Hit Blocks": 267,
+                            "Shared Read Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Seq Scan",
+                                "Relation Name": "messages",
+                                "Plan Rows": 20000,
+                                "Actual Rows": 20000,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.747,
+                                "Shared Hit Blocks": 253,
+                                "Shared Read Blocks": 0
+                              },
+                              {
+                                "Node Type": "Hash",
+                                "Plan Rows": 1000,
+                                "Actual Rows": 1000,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.134,
+                                "Shared Hit Blocks": 14,
+                                "Shared Read Blocks": 0,
+                                "Plans": [
+                                  {
+                                    "Node Type": "Seq Scan",
+                                    "Relation Name": "conversations",
+                                    "Plan Rows": 1000,
+                                    "Actual Rows": 1000,
+                                    "Actual Loops": 1,
+                                    "Actual Total Time": 0.051,
+                                    "Shared Hit Blocks": 14,
+                                    "Shared Read Blocks": 0
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "Node Type": "Hash",
+                            "Plan Rows": 1000,
+                            "Actual Rows": 1000,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.123,
+                            "Shared Hit Blocks": 20,
+                            "Shared Read Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Seq Scan",
+                                "Relation Name": "conversations_participants",
+                                "Plan Rows": 1000,
+                                "Actual Rows": 1000,
+                                "Actual Loops": 1,
+                                "Actual Total Time": 0.072,
+                                "Shared Hit Blocks": 20,
+                                "Shared Read Blocks": 0
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "Node Type": "Hash",
+                        "Plan Rows": 3,
+                        "Actual Rows": 3,
+                        "Actual Loops": 1,
+                        "Actual Total Time": 0.004,
+                        "Shared Hit Blocks": 1,
+                        "Shared Read Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Seq Scan",
+                            "Relation Name": "users",
+                            "Plan Rows": 3,
+                            "Actual Rows": 3,
+                            "Actual Loops": 1,
+                            "Actual Total Time": 0.002,
+                            "Shared Hit Blocks": 1,
+                            "Shared Read Blocks": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
