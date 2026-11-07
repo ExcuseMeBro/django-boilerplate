@@ -10,9 +10,27 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: django_test
+          POSTGRES_DB: django_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - "127.0.0.1:5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U django_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DEBUG: "True"
       USE_MINIO: "False"
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "5432"
+      DB_NAME: django_test
+      DB_USER: django_test
+      CACHE_URL: ""
+      REDIS_URL: ""
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -25,7 +43,9 @@ jobs:
         run: uv sync --locked
       - name: Lint
         run: uv run --locked ruff check .
-      - name: Launcher regression tests
-        run: uv run --locked pytest tests/test_uv_workflow.py
+      - name: Regression tests and synthetic query plans
+        run: uv run --locked pytest
+      - name: Migration drift
+        run: uv run --locked python manage.py makemigrations --check --dry-run
       - name: Django system check
         run: uv run --locked python manage.py check

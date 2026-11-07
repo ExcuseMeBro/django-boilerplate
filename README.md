@@ -251,7 +251,31 @@ uv run --locked python manage.py check
 uv run --locked python manage.py check --deploy
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) Python 3.14 / uv 0.12.5 bilan locked sync, Ruff, launcher regression testlari va Django system check’ni bajaradi. Launcher testlari tashqi servislarni ishga tushirmaydi; to‘liq API/database testlari hali qo‘shilmagan.
+GitHub Actions (`.github/workflows/ci.yml`) Python 3.14 / uv 0.12.5 bilan locked sync, Ruff, barcha regression testlari, migration drift va Django system check’ni bajaradi. PostgreSQL alohida Docker service’da; cache testlari LocMem bilan izolyatsiyalangan, Redis yoki SMS/push tarmoq chaqiruvlari kerak emas.
+
+### Izolyatsiyalangan PostgreSQL testlari
+
+Quyidagi container faqat synthetic test ma’lumotlari uchun: loopback port, vaqtinchalik tmpfs va production credential’larsiz. `django-regression-db` nomi va `55432` porti band bo‘lsa, boshqa nom/port tanlang; mavjud servisni to‘xtatmang.
+
+```bash
+docker run --rm -d --name django-regression-db --cpus=2 --memory=512m \
+  --tmpfs /var/lib/postgresql/data \
+  -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=django_test -e POSTGRES_DB=django_test \
+  -p 127.0.0.1:55432:5432 postgres:17-alpine
+docker exec django-regression-db pg_isready -U django_test
+export DEBUG=True USE_MINIO=False DB_HOST=127.0.0.1 DB_PORT=55432
+export DB_NAME=django_test DB_USER=django_test DB_PASSWORD='' CACHE_URL='' REDIS_URL=''
+uv run --locked pytest
+uv run --locked python manage.py makemigrations --check --dry-run
+# Query plan JSON fayllarining yo‘lini chiqaradi (pytest temporary directory):
+uv run --locked pytest tests/test_query_plans.py -s
+# Faqat yuqorida yaratilgan container:
+docker stop django-regression-db
+```
+
+pytest-django alohida `test_django_test` bazasini yaratadi va o‘chiradi. Haqiqiy/dev bazadan foydalanmang. OTP success/error/replay/limit, JWT rotation/logout, profil privilege escalation, notification ownership/read idempotence va conversation owner/message author ruxsatlari tekshiriladi. Hozir real SMS/push adapter yo‘q; console SMS logger mock qilinadi, device token testlari faqat DB’ga yozadi.
+
+Messaging budget: conversation list **4 SQL** (COUNT + page + participants + latest-message window), message list **2 SQL** (COUNT + joined page); haqiqiy JWT bilan yana bitta user lookup. 1/20/45 natija, keyingi sahifa, latest-message va ko‘rinmas boshqa foydalanuvchi ma’lumotlari ham tekshiriladi. PostgreSQL plan testi 5/1000 suhbat va 50/20 000 xabarda `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` oladi; vaqtga bog‘liq flaky threshold qo‘yilmagan. O‘lchov va qarorlar: [`docs/query-performance.md`](docs/query-performance.md).
 
 ## 📁 Tuzilma
 
@@ -295,13 +319,21 @@ GitHub Actions (`.github/workflows/ci.yml`) Python 3.14 / uv 0.12.5 bilan locked
 
 ## 🤝 Template sifatida foydalanish
 
-GitHub'da **Use this template** tugmasini bosing, yangi repository yarating va loyiha nomlariga mos ravishda quyidagilarni almashtiring:
+GitHub'da **Use this template** tugmasini bosing, yangi repository yarating, keyin dependency talab qilmaydigan Python 3.9+ CLI’ni ishlating:
 
-- `unfold_boilerplate_db`, `unfold_user`
-- `unfold-boilerplate` MinIO bucket nomi
-- Admin panel title/header
-- `core.AppConfig` default qiymatlari
-- SMS va push provider konfiguratsiyasi
+```bash
+python3 scripts/bootstrap.py --name my-api --dry-run
+python3 scripts/bootstrap.py --name my-api
+uv sync --locked
+```
+
+`--name` majburiy: 3–40 belgili lowercase ASCII slug, masalan `my-api`; harf bilan boshlanadi, raqam va bitta ajratuvchi defis mumkin. Path, bo‘shliq, shell belgisi, ketma-ket defis va dependency bilan bir xil nom rad etiladi. Django uchun package/application ID opsiyasi kerak emas.
+
+Bootstrap faqat `pyproject.toml`, `uv.lock` ichidagi loyiha nomi, `config/settings.py`, `docker-compose.yaml` va `.env.example` ichidagi starter default’larini moslaydi: `my_api_db`, `my_api`, `my-api` bucket/cache nomi. Django’ning `config`, `core`, `messaging` modullari va migration tarixi o‘zgarmaydi. Oldindan qo‘lda o‘zgartirilgan default’lar saqlanadi.
+
+Mavjud `.env` **o‘qilmaydi va o‘zgarmaydi**, credential fayllariga tegilmaydi. `.env` yo‘q bo‘lsa template’dan faqat exclusive-create bilan, `0600` huquqda yaratiladi; secretlar avtomatik yaratilmaydi. SECRET_KEY, DB_PASSWORD va storage credential’larini o‘zingiz kiriting; `.env`ni commit qilmang. `--dry-run` faqat yo‘llarni ko‘rsatadi, kontent/secret chiqarmaydi va hech narsa yozmaydi. Bir xil nom bilan qayta bajarish idempotent; boshqa nomga ikkinchi rename rad etiladi. Symlink source fayllar rad etiladi; parallel bootstrap/editor ishlatmang.
+
+Bootstrap dependency o‘rnatmaydi, migration yoki servis ishga tushirmaydi. Admin panel title/header, `core.AppConfig` default qiymatlari va SMS/push provider konfiguratsiyasini qo‘lda sozlang. Testlar CLI’ni vaqtinchalik nusxalarda tekshiradi (`tests/test_bootstrap.py`); ishchi checkout o‘zgarmaydi.
 
 ---
 
